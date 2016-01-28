@@ -1,4 +1,4 @@
-package com.slim.slimfilemanager;
+package com.slim.slimfilemanager.fragment;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -8,9 +8,11 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -32,6 +34,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.slim.slimfilemanager.FileManager;
+import com.slim.slimfilemanager.R;
+import com.slim.slimfilemanager.ThemeActivity;
 import com.slim.slimfilemanager.multichoice.MultiChoiceViewHolder;
 import com.slim.slimfilemanager.multichoice.MultiSelector;
 import com.slim.slimfilemanager.settings.SettingsProvider;
@@ -55,7 +60,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
-public class BrowserFragment extends Fragment implements View.OnClickListener,
+public abstract class BaseBrowserFragment extends Fragment implements View.OnClickListener,
         FragmentLifecycle, SearchView.OnQueryTextListener {
 
     private static final int MENU_COPY = 1001;
@@ -69,40 +74,40 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
     public static final int ACTION_ADD_FOLDER = 10001;
     public static final int ACTION_ADD_FILE = 10002;
 
-    private static final String ARG_PATH = "path";
+    protected static final String ARG_PATH = "path";
 
-    private String mCurrentPath;
-    private String mMimeType;
+    protected String mCurrentPath;
+    protected String mMimeType;
 
-    private Context mContext;
-    private FileManager mActivity;
+    protected Context mContext;
+    protected FileManager mActivity;
 
     private MultiSelector mMultiSelector = new MultiSelector();
 
-    private ActionMode mActionMode;
-    private TextView mPath;
-    private SearchView mSearchView;
-    private ProgressBar mProgress;
-    private RecyclerView mRecyclerView;
-    private ViewAdapter mAdapter;
-    private ArrayList<Item> mFiles = new ArrayList<>();
+    protected boolean mSupportsActionMode = true;
+    protected boolean mSupportsSearching = true;
 
-    private boolean mExitOnBack = false;
-    private boolean mSearching = false;
-    private boolean mPicking = false;
+    private ActionMode mActionMode;
+    protected TextView mPath;
+    private SearchView mSearchView;
+    private SwipeRefreshLayout mRefreshLayout;
+    protected ProgressBar mProgress;
+    protected RecyclerView mRecyclerView;
+    protected ViewAdapter mAdapter;
+    protected ArrayList<Item> mFiles = new ArrayList<>();
+
+    protected boolean mExitOnBack = false;
+    protected boolean mSearching = false;
+    protected boolean mPicking = false;
 
     public class Item {
         public String name;
         public String path;
     }
 
-    public static BrowserFragment newInstance(String path) {
-        BrowserFragment fragment = new BrowserFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PATH, path);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    public abstract void onClickFile(String path);
+    public abstract void filesChanged(String path);
+    public abstract String getFilePath(int i);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -123,12 +128,6 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
 
     @Override
     public void onResumeFragment() {
-        /*if (mPasteButton == null) return;
-        if (!SelectedFiles.isEmpty()) {
-            mPasteButton.setVisibility(View.VISIBLE);
-        } else {
-            mPasteButton.setVisibility(View.GONE);
-        }*/
     }
 
     public void onPreferencesChanged() {
@@ -181,7 +180,17 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
 
         mProgress = (ProgressBar) rootView.findViewById(R.id.progress);
         mProgress.setIndeterminate(true);
-        mProgress.setVisibility(View.GONE);
+
+        mRefreshLayout =
+                (SwipeRefreshLayout) rootView.findViewById(R.id.swipe_refresh);
+        mRefreshLayout.setColorSchemeColors(ThemeActivity.getAccentColor(getActivity()), Color.RED);
+        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                onClickFile(mCurrentPath);
+                mRefreshLayout.setRefreshing(false);
+            }
+        });
 
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.list);
 
@@ -259,7 +268,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
             SelectedFiles.clearAll();
             for (int i = 0; i < mFiles.size(); i++) {
                 if (mMultiSelector.isSelected(i)) {
-                    SelectedFiles.addFile(mFiles.get(i).path);
+                    SelectedFiles.addFile(getFilePath(i));
                 }
             }
 
@@ -304,6 +313,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
 
     public void setSearching(boolean searching) {
         mSearching = searching;
+        //mSearchView.setIconified(searching);
     }
 
     @Override
@@ -349,6 +359,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
     @Override
     public void onCreateOptionsMenu(final Menu menu, MenuInflater inflater) {
         if (mPicking) return;
+        menu.findItem(R.id.search).setVisible(mSupportsSearching);
         mSearchView = (SearchView) menu.findItem(R.id.search).getActionView();
         if (mSearchView != null) {
             mSearchView.setIconifiedByDefault(true);
@@ -365,7 +376,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
             mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
                 @Override
                 public boolean onClose() {
-                    mProgress.setVisibility(View.GONE);
+                    mProgress.setVisibility(View.VISIBLE);
                     setSearching(false);
                     filesChanged(mCurrentPath);
                     return false;
@@ -381,6 +392,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
         switch (item.getItemId()) {
             case R.id.search:
                 setSearching(true);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -401,7 +413,6 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
 
     @Override
     public boolean onQueryTextSubmit(String query) {
-
         return false;
     }
 
@@ -409,30 +420,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
         mMimeType = type;
     }
 
-    private void onClickFile(String file) {
-        if (TextUtils.isEmpty(file)) {
-            return;
-        }
-        File f = new File(file);
-        if (f.exists()) {
-            if (f.isDirectory()) {
-                filesChanged(file);
-            } else {
-                if (mPicking) {
-                    filePicked(f);
-                    return;
-                }
-                String ext = FileUtil.getExtension(f);
-                if (ext.equals("zip") || ext.equals("tar") || ext.equals("gz")) {
-                    onClickArchive(file);
-                } else {
-                    Utils.onClickFile(mContext, file);
-                }
-            }
-        }
-    }
-
-    private void filePicked(File file) {
+    protected void filePicked(File file) {
         Uri data = Uri.fromFile(file);
 
         Intent intent = new Intent();
@@ -443,7 +431,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
         activity.finish();
     }
 
-    private void onClickArchive(final String file) {
+    protected void onClickArchive(final String file) {
 
         final File archive = new File(file);
 
@@ -503,36 +491,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
         }
     }
 
-    protected void filesChanged(String file) {
-        if (mExitOnBack) mExitOnBack = false;
-        File newPath = new File(file);
-        if (!newPath.exists()) {
-            return;
-        }
-        mActivity.setTabTitle(this, newPath);
-        if (!newPath.canRead() && !RootUtils.isRootAvailable()) {
-            Toast.makeText(mContext, "Root is required to view folder.", Toast.LENGTH_SHORT).show();
-        }
-        List<String> files = Utils.listFiles(file);
-        if (files == null) {
-            return;
-        }
-        if (mPath != null) mPath.setText(new File(file).getAbsolutePath());
-        mCurrentPath = file;
-        if (!mFiles.isEmpty()) mFiles.clear();
-        mAdapter.notifyDataSetChanged();
-        for (String s : files) {
-            if (mPicking && !TextUtils.isEmpty(mMimeType) && mMimeType.startsWith("image/")
-                    && !MimeUtils.isPicture(new File(s)) && new File(s).isFile()) continue;
-                Item item = new Item();
-                item.name = new File(s).getName();
-                item.path = s;
-                mFiles.add(item);
-                sortFiles();
-                mAdapter.notifyItemInserted(mFiles.indexOf(item));
-        }
-        mRecyclerView.scrollToPosition(0);
-    }
+
 
     public String getCurrentPath() {
         return mCurrentPath;
@@ -631,12 +590,11 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
         mAdapter.notifyItemInserted(mFiles.indexOf(item));
     }
 
-    private void sortFiles() {
+    protected void sortFiles() {
         SortUtils.sort(mContext, mFiles);
     }
 
     public void showDialog(int id) {
-
         DialogFragment newFragment =
                 MyAlertDialogFragment.newInstance(id);
         newFragment.setTargetFragment(this, 0);
@@ -653,8 +611,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
             return frag;
         }
 
-        BrowserFragment getOwner() {
-            return (BrowserFragment) getTargetFragment();
+        BaseBrowserFragment getOwner() {
+            return (BaseBrowserFragment) getTargetFragment();
         }
 
         @Override
@@ -870,10 +828,24 @@ public class BrowserFragment extends Fragment implements View.OnClickListener,
         }
 
         public boolean onLongClick(View view) {
+            if (!mSupportsActionMode) return false;
             mActivity.startActionMode(mMultiSelect);
             mMultiSelector.setSelectable(true);
             mMultiSelector.setSelected(this, true);
             return true;
+        }
+    }
+
+    protected void fileClicked(File file) {
+        if (mPicking) {
+            filePicked(file);
+            return;
+        }
+        String ext = FileUtil.getExtension(file);
+        if (ext.equals("zip") || ext.equals("tar") || ext.equals("gz")) {
+            onClickArchive(file.getAbsolutePath());
+        } else {
+            Utils.onClickFile(mContext, file.getAbsolutePath());
         }
     }
 }

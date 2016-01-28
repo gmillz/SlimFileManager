@@ -27,6 +27,27 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".activity.PdfViewerActivity"
+            android:label="PDF Viewer">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".dropbox.DropboxActivity"
+            android:label="Dropbox Test">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <activity android:name="com.slim.turboeditor.activity.MainActivity"
             android:label="@string/text_editor"
             android:launchMode="singleTop"
@@ -96,6 +117,22 @@
         </activity>
 
         <activity android:name=".settings.SettingsActivity" />
+
+        <!-- dropbox activity -->
+        <activity
+            android:name="com.dropbox.client2.android.AuthActivity"
+            android:configChanges="orientation|keyboard"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            <intent-filter>
+                <!-- Change this to be db- followed by your app key -->
+                <data android:scheme="db-vkvtumtv9dvt53z" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
     </application>
 

@@ -56,7 +56,7 @@ public class RootUtils {
             os.flush();
 
             if (process.waitFor() != 0 || (!"".equals(err) && null != err)) {
-                Log.e("Root Error, cmd: " + cmd, err);
+                Log.e("Root Error, cmd: " + cmd, "error: " + err);
                 return null;
             }
             return reader;

@@ -2,7 +2,10 @@ package com.slim.slimfilemanager.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.Environment;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.slim.slimfilemanager.R;
@@ -114,5 +117,21 @@ public class Utils {
             e.printStackTrace();
         }
         return value;
+    }
+
+    public static int darkenColor(int color) {
+        int r = Color.red(color);
+        int b = Color.blue(color);
+        int g = Color.green(color);
+
+        return Color.rgb((int)(r*.9), (int)(g*.9), (int)(b*.9));
+    }
+
+    public static String getCacheDir() {
+        File cache = new File(Environment.getExternalStorageDirectory() + "/.file_manager_cache");
+        if (!cache.exists()) {
+            if (!cache.mkdirs()) return null;
+        }
+        return cache.getAbsolutePath();
     }
 }

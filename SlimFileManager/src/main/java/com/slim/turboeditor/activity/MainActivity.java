@@ -57,7 +57,7 @@ import com.slim.turboeditor.texteditor.PageSystemButtons;
 import com.slim.turboeditor.texteditor.SearchResult;
 import com.slim.turboeditor.views.Editor;
 import com.slim.turboeditor.views.GoodScrollView;
-import com.slim.utils.Constant;
+import com.slim.util.Constant;
 
 import org.apache.commons.io.FilenameUtils;
 

@@ -8,7 +8,7 @@ import android.preference.SwitchPreference;
 
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.utils.RootUtils;
-import com.slim.utils.Constant;
+import com.slim.util.Constant;
 
 public class SettingsFragment extends PreferenceFragment {
 

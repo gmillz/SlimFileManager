@@ -3,7 +3,7 @@ package com.slim.slimfilemanager.utils;
 import android.content.Context;
 import android.text.TextUtils;
 
-import com.slim.slimfilemanager.BrowserFragment;
+import com.slim.slimfilemanager.fragment.BaseBrowserFragment;
 import com.slim.slimfilemanager.settings.SettingsProvider;
 
 import java.io.File;
@@ -17,7 +17,7 @@ public class SortUtils {
     public static final String SORT_MODE_SIZE = "sort_mode_size";
     public static final String SORT_MODE_TYPE = "sort_mode_type";
 
-    public static void sort(Context context, ArrayList<BrowserFragment.Item> files) {
+    public static void sort(Context context, ArrayList<BaseBrowserFragment.Item> files) {
         if (context != null) {
             String sortMode = SettingsProvider.getString(context,
                     SettingsProvider.SORT_MODE, SORT_MODE_NAME);
@@ -33,19 +33,19 @@ public class SortUtils {
         Collections.sort(files, getNameComparator());
     }
 
-    private static Comparator<BrowserFragment.Item> getNameComparator() {
-        return new Comparator<BrowserFragment.Item>() {
+    private static Comparator<BaseBrowserFragment.Item> getNameComparator() {
+        return new Comparator<BaseBrowserFragment.Item>() {
             @Override
-            public int compare(BrowserFragment.Item lhs, BrowserFragment.Item rhs) {
+            public int compare(BaseBrowserFragment.Item lhs, BaseBrowserFragment.Item rhs) {
                 return lhs.name.toLowerCase().compareTo(rhs.name.toLowerCase());
             }
         };
     }
 
-    private static Comparator<BrowserFragment.Item> getSizeComparator() {
-        return new Comparator<BrowserFragment.Item>() {
+    private static Comparator<BaseBrowserFragment.Item> getSizeComparator() {
+        return new Comparator<BaseBrowserFragment.Item>() {
             @Override
-            public int compare(BrowserFragment.Item lhs, BrowserFragment.Item rhs) {
+            public int compare(BaseBrowserFragment.Item lhs, BaseBrowserFragment.Item rhs) {
                 File a = new File(lhs.path);
                 File b = new File(rhs.path);
 
@@ -96,10 +96,10 @@ public class SortUtils {
         };
     }
 
-    private static Comparator<BrowserFragment.Item> getTypeComparator() {
-        return new Comparator<BrowserFragment.Item>() {
+    private static Comparator<BaseBrowserFragment.Item> getTypeComparator() {
+        return new Comparator<BaseBrowserFragment.Item>() {
             @Override
-            public int compare(BrowserFragment.Item lhs, BrowserFragment.Item rhs) {
+            public int compare(BaseBrowserFragment.Item lhs, BaseBrowserFragment.Item rhs) {
                 File a = new File(lhs.path);
                 File b = new File(rhs.path);
 

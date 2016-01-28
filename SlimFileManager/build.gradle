@@ -29,12 +29,15 @@ dependencies {
     compile 'com.android.support:support-v13:23.1.0'
     compile 'com.android.support:recyclerview-v7:23.1.0'
     compile 'com.android.support:appcompat-v7:23.1.0'
+    compile 'com.android.support:design:23.1.1'
 
-    compile 'com.getbase:floatingactionbutton:1.10.1'
     compile 'org.androidannotations:androidannotations-api:3.3.2'
     compile 'com.jcraft:jsch:0.1.52'
     compile 'org.apache.commons:commons-compress:1.6'
     compile 'commons-io:commons-io:2.4'
     compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'com.joanzapata.pdfview:android-pdfview:1.0.4@aar'
     compile files('libs/juniversalchardet-1.0.3.jar')
+    compile files('libs/dropbox-android-sdk-1.6.3.jar')
+    compile files('libs/json-simple-1.1.1.jar')
 }

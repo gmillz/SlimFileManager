@@ -6,12 +6,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
@@ -19,7 +21,11 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Environment;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v13.app.FragmentStatePagerAdapter;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -39,11 +45,15 @@ import android.widget.TextView;
 
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
+import com.slim.slimfilemanager.fragment.BaseBrowserFragment;
+import com.slim.slimfilemanager.fragment.BrowserFragment;
+import com.slim.slimfilemanager.fragment.DropboxFragment;
 import com.slim.slimfilemanager.settings.SettingsActivity;
 import com.slim.slimfilemanager.settings.SettingsProvider;
 import com.slim.slimfilemanager.utils.FragmentLifecycle;
 import com.slim.slimfilemanager.utils.IconCache;
 import com.slim.slimfilemanager.utils.PasteTask;
+import com.slim.slimfilemanager.utils.Utils;
 import com.slim.slimfilemanager.widget.PageIndicator;
 import com.slim.slimfilemanager.widget.TabPageIndicator;
 
@@ -51,8 +61,9 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
-    private BrowserFragment mFragment;
+    private BaseBrowserFragment mFragment;
 
+    private View mView;
     private ViewPager mViewPager;
     private PageIndicator mPageIndicator;
     private TabPageIndicator mTabs;
@@ -79,6 +90,8 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
         setContentView(R.layout.file_manager);
         setupViews();
 
+        checkPermissions();
+
         if (intent.getAction().equals(Intent.ACTION_GET_CONTENT)) {
             hideViews();
             showFragment(intent.getType());
@@ -102,18 +115,55 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
         }
     }
 
+    public void checkPermissions() {
+        String[] permissions = {
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        };
+
+        boolean granted = true;
+        for (String perm : permissions) {
+            if (ContextCompat.checkSelfPermission(this, perm)
+                    != PackageManager.PERMISSION_GRANTED) {
+                granted = false;
+            }
+        }
+        if (granted) {
+            return;
+        }
+
+        ActivityCompat.requestPermissions(this, permissions, 1);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                          @NonNull int[] grantResults) {
+        if (requestCode == 1) {
+            boolean denied = false;
+            for (int i = 0; i < permissions.length; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                    denied = true;
+                }
+            }
+            if (denied) {
+                Snackbar.make(mView, "Unable to continue, Permissions Denied",
+                        Snackbar.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     @Override
     public void onStart() {
         super.onStart();
 
         if (mSectionsPagerAdapter != null && mViewPager != null) {
-            setCurrentlyDisplayedFragment((BrowserFragment) mSectionsPagerAdapter.getItem(
+            setCurrentlyDisplayedFragment((BaseBrowserFragment) mSectionsPagerAdapter.getItem(
                     mViewPager.getCurrentItem()));
         }
     }
 
     private void showFragment(String type) {
-        BrowserFragment fragment = new BrowserFragment();
+        BaseBrowserFragment fragment = new BrowserFragment();
         getFragmentManager().beginTransaction().add(android.R.id.content, fragment).commit();
         setCurrentlyDisplayedFragment(fragment);
         fragment.setPicking();
@@ -121,6 +171,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
     }
 
     private void setupViews() {
+        mView = findViewById(R.id.base);
         mDrawer = (ListView) findViewById(R.id.drawer);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -199,6 +250,9 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
     private void setupTabs() {
         mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
         mViewPager.setAdapter(mSectionsPagerAdapter);
+
+        mSectionsPagerAdapter.addDropboxTab();
+
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
             @Override
@@ -215,9 +269,6 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
                 //if (mActionMenu != null) {
                 //    mActionMenu.collapse();
                 //}
-
-                setCurrentlyDisplayedFragment(
-                        (BrowserFragment) mSectionsPagerAdapter.getItem(position));
 
                 FragmentLifecycle fragmentToHide = (FragmentLifecycle)
                         mSectionsPagerAdapter.getItem(mCurrentPosition);
@@ -249,7 +300,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
         }
     }
 
-    public void setTabTitle(BrowserFragment fragment, File file) {
+    public void setTabTitle(BaseBrowserFragment fragment, File file) {
         boolean root = file.getAbsolutePath().equals("/");
         String title = root ? "/" : file.getName();
         if (fragment.getUserVisibleHint()) {
@@ -267,7 +318,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
     private void setupActionButtons() {
         buildActionButtons();
 
-        mPasteButton.setImageResource(R.drawable.paste);
+        mActionMenu.setColorNormal(getAccentColor(this));
+        mActionMenu.setColorPressed(Utils.darkenColor(getAccentColor(this)));
+
+        mPasteButton.setColorNormal(getAccentColor(this));
+        mPasteButton.setColorPressed(Utils.darkenColor(getAccentColor(this)));
         mPasteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -293,9 +348,9 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
 
     private void buildActionButtons() {
         mActionMenu.addButton(getButton(R.drawable.add_folder,
-                R.string.create_folder, BrowserFragment.ACTION_ADD_FOLDER));
+                R.string.create_folder, BaseBrowserFragment.ACTION_ADD_FOLDER));
         mActionMenu.addButton(getButton(R.drawable.add_file,
-                R.string.create_file, BrowserFragment.ACTION_ADD_FILE));
+                R.string.create_file, BaseBrowserFragment.ACTION_ADD_FILE));
     }
 
     private FloatingActionButton getButton(int icon, int title, int tag) {
@@ -310,12 +365,12 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
     }
 
     public void onClick(View v) {
-        if (v.getTag().equals(BrowserFragment.ACTION_ADD_FILE)) {
-            mFragment.showDialog(BrowserFragment.ACTION_ADD_FILE);
-            //mActionMenu.collapseImmediately();
-        } else if (v.getTag().equals(BrowserFragment.ACTION_ADD_FOLDER)) {
-            mFragment.showDialog(BrowserFragment.ACTION_ADD_FOLDER);
-            //mActionMenu.collapseImmediately();
+        if (v.getTag().equals(BaseBrowserFragment.ACTION_ADD_FILE)) {
+            mActionMenu.collapse();
+            mFragment.showDialog(BaseBrowserFragment.ACTION_ADD_FILE);
+        } else if (v.getTag().equals(BaseBrowserFragment.ACTION_ADD_FOLDER)) {
+            mActionMenu.collapse();
+            mFragment.showDialog(BaseBrowserFragment.ACTION_ADD_FOLDER);
         }
     }
 
@@ -326,9 +381,9 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
     public void showPaste(boolean show) {
         if (show) {
             mPasteButton.setVisibility(View.VISIBLE);
-            //mActionMenu.setVisibility(View.GONE);
+            mActionMenu.setVisibility(View.GONE);
         } else {
-            //mActionMenu.setVisibility(View.VISIBLE);
+            mActionMenu.setVisibility(View.VISIBLE);
             mPasteButton.setVisibility(View.GONE);
         }
     }
@@ -365,7 +420,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
         return true;
     }
 
-    public void setCurrentlyDisplayedFragment(final BrowserFragment fragment) {
+    public void setCurrentlyDisplayedFragment(final BaseBrowserFragment fragment) {
         mFragment = fragment;
     }
 
@@ -403,10 +458,10 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
     }
 
     private class TabItem {
-        BrowserFragment fragment;
+        BaseBrowserFragment fragment;
         String path;
 
-        private TabItem(BrowserFragment f, String p) {
+        private TabItem(BaseBrowserFragment f, String p) {
             fragment = f;
             path = p;
         }
@@ -422,14 +477,12 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
             addDefault();
             mTabs = SettingsProvider.getListString(FileManager.this, "tabs", mTabs);
             for (String tab : mTabs) {
-                mItems.add(new TabItem(
-                        BrowserFragment.newInstance(tab), tab));
+                mItems.add(new TabItem(BrowserFragment.newInstance(tab), tab));
             }
         }
 
         public void addTab(String path) {
-            mItems.add(new TabItem(
-                    BrowserFragment.newInstance(path), path));
+            mItems.add(new TabItem(BrowserFragment.newInstance(path), path));
             notifyDataSetChanged();
             FileManager.this.mTabs.notifyDataSetChanged();
             mViewPager.setCurrentItem(getCount());
@@ -438,6 +491,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
             if (mItems.size() == 1) {
                 setCurrentlyDisplayedFragment(mItems.get(0).fragment);
             }
+        }
+
+        public void addDropboxTab() {
+            mItems.add(new TabItem(new DropboxFragment(), "Dropbox"));
+            notifyDataSetChanged();
         }
 
         public void removeCurrentTab() {
@@ -483,6 +541,13 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
         public int getItemPosition(Object object) {
             return PagerAdapter.POSITION_NONE;
         }
+
+        @Override
+        public void setPrimaryItem(ViewGroup container, int position, Object object) {
+            if (object instanceof BaseBrowserFragment) {
+                setCurrentlyDisplayedFragment((BaseBrowserFragment) object);
+            }
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -491,6 +556,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
         public class DrawerItem {
             String title;
             String path;
+            Fragment fragment;
         }
 
         public class ViewHolder {
@@ -530,7 +596,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
             holder.view.setBackground(getAccentStateDrawable(mContext));
 
             holder.title.setText(mItems.get(position).title);
-            BrowserFragment fragment = (BrowserFragment)
+            BaseBrowserFragment fragment = (BaseBrowserFragment)
                     mSectionsPagerAdapter.getItem(mViewPager.getCurrentItem());
             if (fragment != null && getPath(position).equalsIgnoreCase(fragment.getCurrentPath())) {
                 holder.view.setActivated(true);
@@ -559,6 +625,14 @@ public class FileManager extends ThemeActivity implements View.OnClickListener {
             DrawerItem item = new DrawerItem();
             item.title = title;
             item.path = path;
+            mItems.add(item);
+            notifyDataSetChanged();
+        }
+
+        public void addDropboxItem(String title) {
+            DrawerItem item = new DrawerItem();
+            item.title = title;
+            item.fragment = new DropboxFragment();
             mItems.add(item);
             notifyDataSetChanged();
         }

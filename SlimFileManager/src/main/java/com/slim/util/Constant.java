@@ -1,4 +1,4 @@
-package com.slim.utils;
+package com.slim.util;
 
 import org.mozilla.universalchardet.Constants;
 

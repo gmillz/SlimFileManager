@@ -1,7 +1,9 @@
 package com.slim.slimfilemanager;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.TypedValue;
 
 import com.slim.slimfilemanager.settings.SettingsProvider;
 
@@ -30,5 +32,11 @@ public class ThemeActivity extends AppCompatActivity {
         if (mCurrentTheme != newTheme) {
             recreate();
         }
+    }
+
+    public static int getAccentColor(Context context) {
+        TypedValue value = new TypedValue();
+        context.getTheme().resolveAttribute(android.R.attr.colorAccent, value, true);
+        return value.data;
     }
 }
