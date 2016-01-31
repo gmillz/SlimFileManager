@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorAccent">@color/accent</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
@@ -11,13 +11,15 @@
         <item name="actionModeBackground">?colorPrimary</item>
         <item name="iconColor">@color/icons</item>
         <item name="drawerArrowStyle">@style/ArrowStyle</item>
+        <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
+        <item name="windowActionModeOverlay">true</item>
     </style>
 
     <style name="ArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
         <item name="color">@android:color/white</item>
     </style>
 
-    <style name="AppTheme.Dark" parent="Theme.AppCompat">
+    <style name="AppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
         <item name="colorAccent">@color/accent_dark</item>
         <item name="colorPrimary">@color/primary_dark</item>
         <item name="colorPrimaryDark">@color/primary_darker</item>
@@ -25,6 +27,8 @@
         <item name="iconColor">@color/icons_dark</item>
         <item name="drawerArrowStyle">@style/ArrowStyle</item>
         <item name="tabPageIndicatorStyle">@style/Widget.TabPageIndicator</item>
+        <item name="popupTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+        <item name="windowActionModeOverlay">true</item>
     </style>
 
     <style name="menu_labels_style">
@@ -70,6 +74,14 @@
         <item name="android:singleLine">true</item>
         <item name="android:layout_marginTop">16dp</item>
         <item name="android:layout_marginLeft">4dp</item>
+    </style>
+
+    <style name="AppTheme.LabelStyle">
+        <item name="android:background">@drawable/fab_label_background</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
     </style>
 
 </resources>

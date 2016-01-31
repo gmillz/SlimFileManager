@@ -112,7 +112,7 @@ public class TabPageIndicator extends HorizontalScrollView
 
     public void setTabTitle(String title, int position) {
         TabView tv = (TabView) mTabLayout.getChildAt(position);
-        if (tv != null) tv.setText(title);
+        if (tv != null) tv.setText(title.toUpperCase());
     }
 
     private void animateToTab(final int position) {

@@ -207,8 +207,8 @@ public class FileUtil {
                 && RootUtils.createFolder(dir));
     }
 
-    public static String getExtension(File f) {
-        return FilenameUtils.getExtension(f.getName());
+    public static String getExtension(String fileName) {
+        return FilenameUtils.getExtension(fileName);
     }
 
     public static String removeExtension(String s) {

@@ -5,6 +5,7 @@ import android.text.TextUtils;
 
 import com.slim.slimfilemanager.fragment.BaseBrowserFragment;
 import com.slim.slimfilemanager.settings.SettingsProvider;
+import com.slim.slimfilemanager.utils.file.BaseFile;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class SortUtils {
     public static final String SORT_MODE_SIZE = "sort_mode_size";
     public static final String SORT_MODE_TYPE = "sort_mode_type";
 
-    public static void sort(Context context, ArrayList<BaseBrowserFragment.Item> files) {
+    public static void sort(Context context, ArrayList<BaseFile> files) {
         if (context != null) {
             String sortMode = SettingsProvider.getString(context,
                     SettingsProvider.SORT_MODE, SORT_MODE_NAME);
@@ -33,26 +34,24 @@ public class SortUtils {
         Collections.sort(files, getNameComparator());
     }
 
-    private static Comparator<BaseBrowserFragment.Item> getNameComparator() {
-        return new Comparator<BaseBrowserFragment.Item>() {
+    private static Comparator<BaseFile> getNameComparator() {
+        return new Comparator<BaseFile>() {
             @Override
-            public int compare(BaseBrowserFragment.Item lhs, BaseBrowserFragment.Item rhs) {
-                return lhs.name.toLowerCase().compareTo(rhs.name.toLowerCase());
+            public int compare(BaseFile lhs, BaseFile rhs) {
+                return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
             }
         };
     }
 
-    private static Comparator<BaseBrowserFragment.Item> getSizeComparator() {
-        return new Comparator<BaseBrowserFragment.Item>() {
+    private static Comparator<BaseFile> getSizeComparator() {
+        return new Comparator<BaseFile>() {
             @Override
-            public int compare(BaseBrowserFragment.Item lhs, BaseBrowserFragment.Item rhs) {
-                File a = new File(lhs.path);
-                File b = new File(rhs.path);
+            public int compare(BaseFile lhs, BaseFile rhs) {
 
-                if (a.isDirectory() && b.isDirectory()) {
+                if (lhs.isDirectory() && rhs.isDirectory()) {
                     int al = 0, bl = 0;
-                    String[] aList = a.list();
-                    String[] bList = b.list();
+                    String[] aList = lhs.list();
+                    String[] bList = rhs.list();
 
                     if (aList != null) {
                         al = aList.length;
@@ -63,7 +62,7 @@ public class SortUtils {
                     }
 
                     if (al == bl) {
-                        return a.getName().toLowerCase().compareTo(a.getName().toLowerCase());
+                        return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
                     }
 
                     if (al < bl) {
@@ -72,19 +71,19 @@ public class SortUtils {
                     return 1;
                 }
 
-                if (a.isDirectory()) {
+                if (rhs.isDirectory()) {
                     return -1;
                 }
 
-                if (b.isDirectory()) {
+                if (lhs.isDirectory()) {
                     return 1;
                 }
 
-                final long len_a = a.length();
-                final long len_b = b.length();
+                final long len_a = rhs.length();
+                final long len_b = lhs.length();
 
                 if (len_a == len_b) {
-                    return lhs.name.toLowerCase().compareTo(rhs.name.toLowerCase());
+                    return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
                 }
 
                 if (len_a < len_b) {
@@ -96,30 +95,28 @@ public class SortUtils {
         };
     }
 
-    private static Comparator<BaseBrowserFragment.Item> getTypeComparator() {
-        return new Comparator<BaseBrowserFragment.Item>() {
+    private static Comparator<BaseFile> getTypeComparator() {
+        return new Comparator<BaseFile>() {
             @Override
-            public int compare(BaseBrowserFragment.Item lhs, BaseBrowserFragment.Item rhs) {
-                File a = new File(lhs.path);
-                File b = new File(rhs.path);
+            public int compare(BaseFile lhs, BaseFile rhs) {
 
-                if (a.isDirectory() && b.isDirectory()) {
-                    return lhs.name.toLowerCase().compareTo(rhs.name.toLowerCase());
+                if (lhs.isDirectory() && rhs.isDirectory()) {
+                    return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
                 }
 
-                if (a.isDirectory()) {
+                if (lhs.isDirectory()) {
                     return -1;
                 }
 
-                if (b.isDirectory()) {
+                if (rhs.isDirectory()) {
                     return 1;
                 }
 
-                final String ext_a = FileUtil.getExtension(a);
-                final String ext_b = FileUtil.getExtension(b);
+                final String ext_a = lhs.getExtension();
+                final String ext_b = rhs.getExtension();
 
                 if (TextUtils.isEmpty(ext_a) && TextUtils.isEmpty(ext_b)) {
-                    return lhs.name.toLowerCase().compareTo(rhs.name.toLowerCase());
+                    return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
                 }
 
                 if (TextUtils.isEmpty(ext_a)) {
@@ -132,7 +129,7 @@ public class SortUtils {
 
                 final int res = ext_a.compareTo(ext_b);
                 if (res == 0) {
-                    return lhs.name.toLowerCase().compareTo(rhs.name.toLowerCase());
+                    return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
                 }
                 return res;
             }

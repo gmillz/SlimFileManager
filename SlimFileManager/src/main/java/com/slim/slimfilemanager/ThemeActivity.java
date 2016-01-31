@@ -2,6 +2,7 @@ package com.slim.slimfilemanager;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.AttrRes;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 
@@ -34,9 +35,17 @@ public class ThemeActivity extends AppCompatActivity {
         }
     }
 
+    public static int getPrimaryDarkColor(Context context) {
+        return getAttrColor(context, android.R.attr.colorPrimaryDark);
+    }
+
     public static int getAccentColor(Context context) {
+        return getAttrColor(context, android.R.attr.colorAccent);
+    }
+
+    public static int getAttrColor(Context context, @AttrRes int attr) {
         TypedValue value = new TypedValue();
-        context.getTheme().resolveAttribute(android.R.attr.colorAccent, value, true);
+        context.getTheme().resolveAttribute(attr, value, true);
         return value.data;
     }
 }

@@ -2,12 +2,11 @@ package com.slim.slimfilemanager.utils;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.slim.slimfilemanager.R;
+import com.slim.slimfilemanager.utils.file.BaseFile;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,9 +15,15 @@ import java.util.HashMap;
 public class PasteTask implements View.OnClickListener {
 
     Context mContext;
-    ArrayList<String> mFiles = new ArrayList<>();
+    ArrayList<BaseFile> mFiles = new ArrayList<>();
     boolean mMove;
     String mLocation;
+
+    private Callback mCallback;
+
+    public interface Callback {
+        void pasteFiles(ArrayList<String> paths, boolean move);
+    }
 
     String mCurrent;
 
@@ -28,21 +33,22 @@ public class PasteTask implements View.OnClickListener {
     ArrayList<String> mProcess = new ArrayList<>();
 
     public PasteTask(Context context,
-                     boolean shouldDelete, String location) {
+                     boolean shouldDelete, String location, Callback callback) {
         mContext = context;
         mMove = shouldDelete;
         mLocation = location;
+        mCallback = callback;
 
         mFiles.addAll(SelectedFiles.getFiles());
 
         for (int i = 0; i < mFiles.size(); i++) {
-            File file = new File(mFiles.get(i));
+            BaseFile file = mFiles.get(i);
             if (file.exists()) {
                 File newFile = new File(mLocation + File.separator + file.getName());
                 if (newFile.exists()) {
-                    mExistingFiles.put(newFile.getPath(), file.getPath());
+                    mExistingFiles.put(newFile.getPath(), file.getRealPath());
                 } else {
-                    mProcess.add(file.getPath());
+                    mProcess.add(file.getRealPath());
                 }
             }
         }
@@ -50,20 +56,10 @@ public class PasteTask implements View.OnClickListener {
     }
 
     private void processFiles() {
-        boolean failed = false;
         if (mExistingFiles.isEmpty()) {
             if (mProcess.isEmpty()) return;
-            for (String path : mProcess) {
-                if (!TextUtils.isEmpty(path)) {
-                    if (mMove) {
-                        failed = !FileUtil.moveFile(mContext, path, mLocation);
-                    } else {
-                        failed = !FileUtil.copyFile(mContext, path, mLocation);
-                    }
-                }
-            }
-            if (failed) {
-                Toast.makeText(mContext, "Failed.", Toast.LENGTH_SHORT).show();
+            if (mCallback != null) {
+                mCallback.pasteFiles(mProcess, mMove);
             }
         } else {
             String key = mExistingFiles.keySet().iterator().next();
@@ -108,9 +104,9 @@ public class PasteTask implements View.OnClickListener {
     }
 
     public static final class SelectedFiles {
-        private static final ArrayList<String> files = new ArrayList<>();
+        private static final ArrayList<BaseFile> files = new ArrayList<>();
 
-        public static void addFile(String file) {
+        public static void addFile(BaseFile file) {
             files.add(file);
         }
 
@@ -122,7 +118,7 @@ public class PasteTask implements View.OnClickListener {
             return files.isEmpty();
         }
 
-        public static ArrayList<String> getFiles() {
+        public static ArrayList<BaseFile> getFiles() {
             return files;
         }
     }

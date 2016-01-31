@@ -21,8 +21,11 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
+import com.slim.slimfilemanager.widget.TabItem;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class SettingsProvider {
 
@@ -70,18 +73,25 @@ public class SettingsProvider {
         put(context).putInt(key, value).commit();
     }
 
-    public static ArrayList<String> getListString(Context context,
-                                                  String key, ArrayList<String> def) {
+    public static ArrayList<TabItem> getTabList(Context context, String key,
+                                                ArrayList<TabItem> def) {
+        ArrayList<TabItem> items = new ArrayList<>();
         ArrayList<String> array = new ArrayList<>(
                 Arrays.asList(TextUtils.split(get(context).getString(key, ""), "‚‗‚")));
-        if (array.isEmpty()) {
-            array.addAll(def);
+        for (String s : array) {
+            items.add(TabItem.fromString(s));
         }
-        return array;
+        if (array.isEmpty()) {
+            items.addAll(def);
+        }
+        return items;
     }
 
-    public static void putListString(Context context, String key, ArrayList<String> stringList) {
-        String[] myStringList = stringList.toArray(new String[stringList.size()]);
-        put(context).putString(key, TextUtils.join("‚‗‚", myStringList)).apply();
+    public static void putTabList(Context context, String key, ArrayList<TabItem> tabs) {
+        List<String> items = new ArrayList<>();
+        for (TabItem item : tabs) {
+            items.add(item.toString());
+        }
+        put(context).putString(key, TextUtils.join("‚‗‚", items)).apply();
     }
 }

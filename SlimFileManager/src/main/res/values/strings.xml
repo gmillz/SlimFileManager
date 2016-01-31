@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">SlimFileManager</string>
 
-    <string name="file_manager">File Manager</string>
+    <string name="file_manager">FileManager</string>
 
     <string name="blank" translatable="false">---</string>
 
@@ -10,6 +10,8 @@
     <string name="sdcard_title">SD Card</string>
     <string name="downloads_title">Downloads</string>
     <string name="dcim_title">DCIM</string>
+
+    <string name="downloading">Downloading</string>
 
     <string name="cant_open_file">Unable to open file.</string>
 

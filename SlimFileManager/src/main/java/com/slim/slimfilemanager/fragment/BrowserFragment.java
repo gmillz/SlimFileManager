@@ -1,15 +1,23 @@
 package com.slim.slimfilemanager.fragment;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.TextUtils;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.utils.FileUtil;
+import com.slim.slimfilemanager.utils.IconCache;
 import com.slim.slimfilemanager.utils.MimeUtils;
+import com.slim.slimfilemanager.utils.PasteTask;
 import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.slimfilemanager.utils.Utils;
+import com.slim.slimfilemanager.utils.file.BaseFile;
+import com.slim.slimfilemanager.utils.file.BasicFile;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BrowserFragment extends BaseBrowserFragment {
@@ -20,6 +28,26 @@ public class BrowserFragment extends BaseBrowserFragment {
         args.putString(ARG_PATH, path);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        filesChanged(mCurrentPath);
+    }
+
+    @Override
+    public String getTabTitle(String path) {
+        File file = new File(path);
+        String title = file.getName();
+        if (file.getAbsolutePath().equals("/")) {
+            title = "ROOT";
+        } else if (file.getAbsolutePath().equals(
+                Environment.getExternalStorageDirectory().getAbsolutePath())) {
+            title = "SDCARD";
+        }
+        return title;
     }
 
     public void onClickFile(String file) {
@@ -37,17 +65,22 @@ public class BrowserFragment extends BaseBrowserFragment {
     }
 
     @Override
-    public String getFilePath(int i) {
-        return mFiles.get(i).path;
+    public String getDefaultDirectory() {
+        return Environment.getExternalStorageDirectory().getAbsolutePath();
+    }
+
+    @Override
+    public BaseFile getFile(int i) {
+        return mFiles.get(i);
     }
 
     public void filesChanged(String file) {
+        super.filesChanged(file);
         if (mExitOnBack) mExitOnBack = false;
         File newPath = new File(file);
         if (!newPath.exists()) {
             return;
         }
-        mActivity.setTabTitle(this, newPath);
         if (!newPath.canRead() && !RootUtils.isRootAvailable()) {
             Toast.makeText(mContext, "Root is required to view folder.", Toast.LENGTH_SHORT).show();
         }
@@ -55,20 +88,77 @@ public class BrowserFragment extends BaseBrowserFragment {
         if (files == null) {
             return;
         }
-        if (mPath != null) mPath.setText(new File(file).getAbsolutePath());
+        setPathText(new File(file).getAbsolutePath());
         mCurrentPath = file;
         if (!mFiles.isEmpty()) mFiles.clear();
         mAdapter.notifyDataSetChanged();
         for (String s : files) {
             if (mPicking && !TextUtils.isEmpty(mMimeType) && mMimeType.startsWith("image/")
-                    && !MimeUtils.isPicture(new File(s)) && new File(s).isFile()) continue;
-            Item item = new Item();
-            item.name = new File(s).getName();
-            item.path = s;
-            mFiles.add(item);
+                    && !MimeUtils.isPicture(new File(s).getName())
+                    && new File(s).isFile()) continue;
+            BasicFile bf = new BasicFile(mContext, new File(s));
+            mFiles.add(bf);
             sortFiles();
-            mAdapter.notifyItemInserted(mFiles.indexOf(item));
+            mAdapter.notifyItemInserted(mFiles.indexOf(bf));
         }
         mRecyclerView.scrollToPosition(0);
+        hideProgress();
+    }
+
+    @Override
+    public void onDeleteFile(String file) {
+        if (FileUtil.deleteFile(mContext, file)) {
+            removeFile(file);
+        } else {
+            Toast.makeText(mContext,
+                    "Failed to delete file: "
+                            + new File(file).getName(),
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public PasteTask.Callback getPasteCallback() {
+        return new PasteTask.Callback() {
+            @Override
+            public void pasteFiles(ArrayList<String> paths, boolean move) {
+                boolean passed = true;
+                showProgressDialog(move ? R.string.move : R.string.copy, true);
+                for (String path : paths) {
+                    if (move) {
+                        passed = FileUtil.moveFile(mContext, path, mCurrentPath);
+                    } else {
+                        passed = FileUtil.copyFile(mContext, path, mCurrentPath);
+                    }
+                }
+                hideProgressDialog();
+                if (!passed) {
+                    toast("Failed to paste files.");
+                }
+            }
+        };
+    }
+
+    @Override
+    public String getRootFolder() {
+        return File.separator;
+    }
+
+    @Override
+    public void backPressed() {
+        filesChanged(new File(mCurrentPath).getParent());
+    }
+
+    @Override
+    public void getIconForFile(ImageView imageView, int position) {
+        IconCache.getIconForFile(mContext, mFiles.get(position).getRealPath(), imageView);
+    }
+
+    @Override
+    public void addFile(String file) {
+        BasicFile bf = new BasicFile(mContext, new File(file));
+        mFiles.add(bf);
+        sortFiles();
+        mAdapter.notifyItemInserted(mFiles.indexOf(bf));
     }
 }

@@ -1,20 +1,29 @@
 package com.slim.slimfilemanager.fragment;
 
-import android.app.ProgressDialog;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.FileObserver;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.ImageView;
 
 import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
-import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
-import com.slim.slimfilemanager.dropbox.DropBoxConstants;
-import com.slim.slimfilemanager.dropbox.ListFiles;
+import com.slim.slimfilemanager.R;
+import com.slim.slimfilemanager.services.dropbox.DropBoxConstants;
+import com.slim.slimfilemanager.services.dropbox.DropboxLoginActivity;
+import com.slim.slimfilemanager.services.dropbox.IconCache;
+import com.slim.slimfilemanager.services.dropbox.ListFiles;
+import com.slim.slimfilemanager.utils.PasteTask;
 import com.slim.slimfilemanager.utils.Utils;
+import com.slim.slimfilemanager.utils.file.BaseFile;
+import com.slim.slimfilemanager.utils.file.DropboxFile;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -23,13 +32,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+
 
 public class DropboxFragment extends BaseBrowserFragment {
 
+    private static final String TAG = DropboxFragment.class.getName();
+
+    private static final int LOGIN_REQUEST = 10101;
+
     DropboxAPI<AndroidAuthSession> mAPI;
-    Executor mExecutor = Executors.newSingleThreadExecutor();
 
     private final ListFiles.Callback mCallback = new ListFiles.Callback() {
         @Override
@@ -43,49 +54,52 @@ public class DropboxFragment extends BaseBrowserFragment {
             if (!mFiles.isEmpty()) mFiles.clear();
             mAdapter.notifyDataSetChanged();
             for (DropboxAPI.Entry entry : entries) {
-                Log.d("TEST", "ENTRY=" + entry.path + " : " + entry.fileName() + " : " + entry.parentPath());
-                Item item = new Item();
-                item.name = entry.fileName();
-                item.path = entry.path;
-                mFiles.add(item);
+                DropboxFile df = new DropboxFile(mContext, mAPI, entry);
+                mFiles.add(df);
                 sortFiles();
-                mAdapter.notifyItemInserted(mFiles.indexOf(item));
+                mAdapter.notifyItemInserted(mFiles.indexOf(df));
             }
             mRecyclerView.scrollToPosition(0);
+            hideProgress();
         }
     };
-
-    private ProgressDialog mProgressDialog;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mProgressDialog = new ProgressDialog(mContext);
-        mProgressDialog.setTitle("Downloading");
-        mProgressDialog.setMessage("Please wait...");
-
         AppKeyPair appKeyPair = new AppKeyPair(
                 DropBoxConstants.ACCESS_KEY, DropBoxConstants.ACCESS_SECRET);
-        mAPI = new DropboxAPI<>(new AndroidAuthSession(appKeyPair));
+        AndroidAuthSession session = new AndroidAuthSession(appKeyPair);
 
         SharedPreferences prefs = mContext.getSharedPreferences(DropBoxConstants.DROPBOX_NAME, 0);
-        String key = prefs.getString(DropBoxConstants.ACCESS_KEY, null);
-        String secret = prefs.getString(DropBoxConstants.ACCESS_SECRET, null);
+        String token = prefs.getString(DropBoxConstants.ACCESS_TOKEN, null);
 
-        if (key != null && secret != null) {
-            AccessTokenPair accessToken = new AccessTokenPair(key, secret);
-            mAPI.getSession().setAccessTokenPair(accessToken);
-        } else {
-            mAPI.getSession().startOAuth2Authentication(mContext);
+        if (token != null) {
+            session.setOAuth2AccessToken(token);
         }
 
-        filesChanged("/");
+        mAPI = new DropboxAPI<>(session);
+
+        if (!mAPI.getSession().isLinked()) {
+            startActivityForResult(
+                    new Intent(mActivity, DropboxLoginActivity.class), LOGIN_REQUEST);
+        }
+        filesChanged(mCurrentPath);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == LOGIN_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+                filesChanged("/");
+            }
+        }
     }
 
     @Override
     public void onClickFile(final String path) {
-        Log.d("TEST", "path=" + path);
         if (TextUtils.isEmpty(path)) {
             return;
         }
@@ -99,11 +113,12 @@ public class DropboxFragment extends BaseBrowserFragment {
                         mCurrentPath = path;
                         filesChanged(path);
                     } else {
-                        showProgressDialog();
+                        showProgressDialog(R.string.downloading, true);
                         File cacheFile = new File(Utils.getCacheDir() + "/"
                                 + StringUtils.replace(path, "/", "_"));
                         if (cacheFile.exists()) {
-                            cacheFile.delete();
+                            if (!cacheFile.delete())
+                                Log.e(TAG, "Unable to delete " + cacheFile.getAbsolutePath());
                         }
                         FileOutputStream outputStream = new FileOutputStream(cacheFile);
                         mAPI.getFile(path, entry.rev, outputStream, null);
@@ -119,49 +134,71 @@ public class DropboxFragment extends BaseBrowserFragment {
         });
     }
 
-    private void showProgressDialog() {
-        mActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mProgressDialog.show();
-            }
-        });
-    }
-
-    private void hideProgressDialog() {
-        mActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mProgressDialog.hide();
-            }
-        });
-    }
-
     @Override
     public void filesChanged(String path) {
+        super.filesChanged(path);
+        setPathText(path);
+        showProgress();
         ListFiles listFiles = new ListFiles(mAPI, path, mCallback);
         listFiles.execute();
     }
 
     @Override
-    public String getFilePath(int i) {
-        String filePath;
-        try {
-            String path = mFiles.get(i).path;
-            DropboxAPI.Entry entry = mAPI.metadata(path, 1000, null, true, null);
-            File cacheFile = new File(Utils.getCacheDir() + "/"
-                    + StringUtils.replace(path, "/", "_"));
-            if (cacheFile.exists()) {
-                cacheFile.delete();
+    public String getDefaultDirectory() {
+        return "/";
+    }
+
+    @Override
+    public BaseFile getFile(final int i) {
+        AsyncTask<Void, Void, DropboxFile> getFileTask = new AsyncTask<Void, Void, DropboxFile>() {
+            @Override
+            protected DropboxFile doInBackground(Void... voids) {
+                try {
+                    String path = mFiles.get(i).getRealPath();
+                    DropboxAPI.Entry entry = mAPI.metadata(
+                            path, DropBoxConstants.MAX_COUNT, null, true, null);
+
+                    return new DropboxFile(mContext, mAPI, entry);
+                } catch (DropboxException e) {
+                    e.printStackTrace();
+                    return null;
+                }
             }
-            FileOutputStream outputStream = new FileOutputStream(cacheFile);
-            mAPI.getFile(path, entry.rev, outputStream, null);
-            outputStream.close();
-            filePath = cacheFile.getAbsolutePath();
-        } catch (IOException|DropboxException e) {
-            filePath = null;
+        }.execute();
+
+        try {
+            return getFileTask.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-        return filePath;
+    }
+
+    @Override
+    public void onDeleteFile(final String file) {
+        new AsyncTask<Void, Void, Void>() {
+            protected void onPreExecute() {
+                showProgressDialog(R.string.delete_dialog_title, true);
+            }
+            protected Void doInBackground(Void... v) {
+                showProgressDialog(R.string.delete_dialog_title, true);
+                try {
+                    mAPI.delete(file);
+                } catch (DropboxException e) {
+                    toast("Unable to delete " + file);
+                }
+                hideProgressDialog();
+                return null;
+            }
+            protected void onPostExecute(Void v) {
+                hideProgressDialog();
+            }
+        }.executeOnExecutor(mExecutor);
+    }
+
+    @Override
+    public String getTabTitle(String path) {
+        return "Dropbox";
     }
 
     private void watchFile(final File file, final DropboxAPI.Entry entry) {
@@ -181,5 +218,89 @@ public class DropboxFragment extends BaseBrowserFragment {
             }
         };
         observer.startWatching();
+    }
+
+    @Override
+    public PasteTask.Callback getPasteCallback() {
+        return new PasteTask.Callback() {
+            @Override
+            public void pasteFiles(final ArrayList<String> paths, final boolean move) {
+                new AsyncTask<Void, Long, Boolean>() {
+                    @Override
+                    protected void onPreExecute() {
+                        showProgressDialog(move ? R.string.move : R.string.copy, false);
+                    }
+
+                    @Override
+                    protected Boolean doInBackground(Void... v) {
+                        try {
+                            for (String path : paths) {
+                                File file = new File(path);
+                                if (file.exists()) {
+                                    FileInputStream fis = new FileInputStream(file);
+                                    String dropboxPath =
+                                            mCurrentPath + File.separator + file.getName();
+                                    DropboxAPI.UploadRequest request =
+                                            mAPI.putFileOverwriteRequest(
+                                                    dropboxPath, fis, file.length(),
+                                                    new ProgressListener() {
+                                                        @Override
+                                                        public long progressInterval() {
+                                                            return 500;
+                                                        }
+
+                                                        @Override
+                                                        public void onProgress(
+                                                                long l, long l1) {
+                                                            publishProgress(l, l1);
+                                                        }
+                                                    });
+
+                                    if (request != null) {
+                                        request.upload();
+                                    }
+                                }
+                            }
+                        } catch (IOException | DropboxException e) {
+                            return false;
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Boolean b) {
+                        hideProgressDialog();
+                    }
+
+                    @Override
+                    protected void onProgressUpdate(Long... progress) {
+                        int percent = (int)
+                                (100.0 * (double) progress[0] / progress[1] + 0.5);
+                        updateProgress(percent);
+                    }
+                }.executeOnExecutor(mExecutor);
+            }
+        };
+    }
+
+    @Override
+    public String getRootFolder() {
+        return File.separator;
+    }
+
+    @Override
+    public void backPressed() {
+        filesChanged(new File(mCurrentPath).getParent());
+    }
+
+    @Override
+    public void addFile(String path) {
+        // TODO
+    }
+
+    @Override
+    public void getIconForFile(ImageView imageView, int position) {
+        IconCache.getIconForFile(mContext,
+                mAPI, ((DropboxFile) mFiles.get(position)).getEntry(), imageView);
     }
 }

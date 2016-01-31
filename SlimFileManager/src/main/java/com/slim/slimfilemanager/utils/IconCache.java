@@ -47,9 +47,9 @@ public class IconCache {
     }
 
     public static Object getImage(Context context, File file) {
-        boolean isPicture = MimeUtils.isPicture(file);
-        boolean isVideo = MimeUtils.isVideo(file);
-        boolean isApp = MimeUtils.isApp(file);
+        boolean isPicture = MimeUtils.isPicture(file.getName());
+        boolean isVideo = MimeUtils.isVideo(file.getName());
+        boolean isApp = MimeUtils.isApp(file.getName());
 
         Object object;
         int width = (int) context.getResources().getDimension(R.dimen.item_height);
@@ -95,7 +95,7 @@ public class IconCache {
             } else {
                 object = context.getDrawable(R.drawable.empty_folder);
             }
-        } else if (MimeUtils.isTextFile(file)) {
+        } else if (MimeUtils.isTextFile(file.getName())) {
             object = context.getDrawable(R.drawable.text);
         } else {
             object = context.getDrawable(R.drawable.file);

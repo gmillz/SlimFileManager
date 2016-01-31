@@ -2,7 +2,6 @@ package com.slim.slimfilemanager.utils;
 
 import android.webkit.MimeTypeMap;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -11,8 +10,8 @@ public class MimeUtils {
 
     public static final String ALL_MIME_TYPES = "*/*";
 
-    public static String getMimeType(File file) {
-        final String extension = FileUtil.getExtension(file);
+    public static String getMimeType(String name) {
+        final String extension = FileUtil.getExtension(name);
         String type = null;
 
         if (extension != null && !extension.isEmpty()) {
@@ -31,22 +30,22 @@ public class MimeUtils {
         return Pattern.matches(mime.replace("*", ".*"), input);
     }
 
-    public static boolean isPicture(File f) {
-        final String mime = getMimeType(f);
+    public static boolean isPicture(String name) {
+        final String mime = getMimeType(name);
         return mime != null && mimeTypeMatch("image/*", mime);
     }
 
-    public static boolean isVideo(File f) {
-        final String mime = getMimeType(f);
+    public static boolean isVideo(String name) {
+        final String mime = getMimeType(name);
         return mime != null && mimeTypeMatch("video/*", mime);
     }
 
-    public static boolean isApp(File f) {
-        return f.getName().endsWith(".apk");
+    public static boolean isApp(String name) {
+        return name.endsWith(".apk");
     }
 
-    public static boolean isTextFile(File f) {
-        final String mime = getMimeType(f);
+    public static boolean isTextFile(String name) {
+        final String mime = getMimeType(name);
         return mime != null && mimeTypeMatch("text/*", mime);
     }
 

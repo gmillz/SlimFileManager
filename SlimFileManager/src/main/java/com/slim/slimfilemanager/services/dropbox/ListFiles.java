@@ -1,4 +1,4 @@
-package com.slim.slimfilemanager.dropbox;
+package com.slim.slimfilemanager.services.dropbox;
 
 import java.util.ArrayList;
 

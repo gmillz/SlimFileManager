@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -40,12 +42,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".dropbox.DropboxActivity"
-            android:label="Dropbox Test">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        <activity android:name=".services.dropbox.DropboxLoginActivity"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:label="Dropbox Login">
         </activity>
 
         <activity android:name="com.slim.turboeditor.activity.MainActivity"

@@ -79,7 +79,7 @@ public class Utils {
         if (file.isDirectory()) {
             return null;
         }
-        return MimeUtils.getMimeType(file);
+        return MimeUtils.getMimeType(file.getName());
     }
 
     public static String displaySize(long bytes) {

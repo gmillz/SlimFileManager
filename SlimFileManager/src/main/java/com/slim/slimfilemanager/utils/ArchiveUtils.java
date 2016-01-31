@@ -2,6 +2,8 @@ package com.slim.slimfilemanager.utils;
 
 import android.content.Context;
 
+import com.slim.slimfilemanager.utils.file.BaseFile;
+
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
@@ -72,7 +74,7 @@ public class ArchiveUtils {
         return location;
     }
 
-    public static String createZipFile(String zip, ArrayList<String> files) {
+    public static String createZipFile(String zip, ArrayList<BaseFile> files) {
         if (!zip.startsWith(File.separator)) {
             zip = BackgroundUtils.ARCHIVE_LOCATION + File.separator + zip;
         }
@@ -85,9 +87,8 @@ public class ArchiveUtils {
             ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(
                     dest));
 
-            for (String s : files) {
-                File file = new File(s);
-
+            for (BaseFile bf : files) {
+                File file = bf.getFile();
                 if (file.isDirectory()) {
                     zipFolder(out, file, file.getParent().length());
                 } else {
@@ -152,7 +153,7 @@ public class ArchiveUtils {
         File inputFile = new File(input);
 
         boolean deleteAfter = false;
-        if (FileUtil.getExtension(inputFile).equals("gz")) {
+        if (FileUtil.getExtension(inputFile.getName()).equals("gz")) {
             inputFile = new File(unGzip(input, BackgroundUtils.EXTRACTED_LOCATION));
             deleteAfter = true;
         }
@@ -209,12 +210,12 @@ public class ArchiveUtils {
         return outputDir.getAbsolutePath();
     }
 
-    public static String createTar(String tar, ArrayList<String> files) {
+    public static String createTar(String tar, ArrayList<BaseFile> files) {
         if (!tar.startsWith(File.separator)) {
             tar = BackgroundUtils.ARCHIVE_LOCATION + File.separator + tar;
         }
         File tarFile = new File(tar);
-        if (!FileUtil.getExtension(tarFile).equals("tar")) {
+        if (!FileUtil.getExtension(tarFile.getName()).equals("tar")) {
             tar += ".tar";
             tarFile = new File(tar);
         }
@@ -223,8 +224,8 @@ public class ArchiveUtils {
             OutputStream os = new FileOutputStream(tarFile);
             ArchiveOutputStream aos = new ArchiveStreamFactory()
                     .createArchiveOutputStream(ArchiveStreamFactory.TAR, os);
-            for (String s : files) {
-                File input = new File(s);
+            for (BaseFile bf : files) {
+                File input = bf.getFile();
                 addFilesToCompression(aos, input, ".");
             }
             aos.finish();
@@ -234,7 +235,7 @@ public class ArchiveUtils {
         return BackgroundUtils.ARCHIVE_LOCATION;
     }
 
-    public static String createTarGZ(String tarFile, ArrayList<String> files) {
+    public static String createTarGZ(String tarFile, ArrayList<BaseFile> files) {
 
         if (!tarFile.startsWith(File.separator)) {
             tarFile = BackgroundUtils.ARCHIVE_LOCATION + File.separator + tarFile;
@@ -250,8 +251,8 @@ public class ArchiveUtils {
                     new GZIPOutputStream(new BufferedOutputStream(fos)));
             taos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_STAR);
             taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
-            for (String f : files) {
-                addFilesToCompression(taos, new File(f), ".");
+            for (BaseFile bf : files) {
+                addFilesToCompression(taos, bf.getFile(), ".");
             }
             taos.close();
         } catch (IOException e) {
@@ -292,7 +293,7 @@ public class ArchiveUtils {
         outputFile = new File(outputFile, FileUtil.removeExtension(input));
 
         if (outputFile.exists()) {
-            String ext = FileUtil.getExtension(outputFile);
+            String ext = FileUtil.getExtension(outputFile.getName());
             String file = FileUtil.removeExtension(outputFile.getAbsolutePath());
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
                 File test = new File(file + "-" + i + "." + ext);

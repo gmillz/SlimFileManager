@@ -5,13 +5,15 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
+import android.support.annotation.CallSuper;
+import android.support.annotation.StringRes;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -34,6 +36,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.slim.slimfilemanager.BuildConfig;
 import com.slim.slimfilemanager.FileManager;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
@@ -43,22 +46,24 @@ import com.slim.slimfilemanager.settings.SettingsProvider;
 import com.slim.slimfilemanager.utils.BackgroundUtils;
 import com.slim.slimfilemanager.utils.FileUtil;
 import com.slim.slimfilemanager.utils.FragmentLifecycle;
-import com.slim.slimfilemanager.utils.IconCache;
 import com.slim.slimfilemanager.utils.MimeUtils;
+import com.slim.slimfilemanager.utils.PasteTask;
 import com.slim.slimfilemanager.utils.PasteTask.SelectedFiles;
 import com.slim.slimfilemanager.utils.PermissionsDialog;
 import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.slimfilemanager.utils.SortUtils;
 import com.slim.slimfilemanager.utils.Utils;
+import com.slim.slimfilemanager.utils.file.BaseFile;
 import com.slim.slimfilemanager.widget.DividerItemDecoration;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public abstract class BaseBrowserFragment extends Fragment implements View.OnClickListener,
         FragmentLifecycle, SearchView.OnQueryTextListener {
@@ -92,22 +97,32 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
     private SearchView mSearchView;
     private SwipeRefreshLayout mRefreshLayout;
     protected ProgressBar mProgress;
+    protected ProgressDialog mProgressDialog;
     protected RecyclerView mRecyclerView;
     protected ViewAdapter mAdapter;
-    protected ArrayList<Item> mFiles = new ArrayList<>();
+    protected final Executor mExecutor = Executors.newSingleThreadExecutor();
+    protected ArrayList<BaseFile> mFiles = new ArrayList<>();
 
     protected boolean mExitOnBack = false;
     protected boolean mSearching = false;
     protected boolean mPicking = false;
 
-    public class Item {
-        public String name;
-        public String path;
-    }
-
+    public abstract String getTabTitle(String path);
     public abstract void onClickFile(String path);
-    public abstract void filesChanged(String path);
-    public abstract String getFilePath(int i);
+
+    @CallSuper
+    public void filesChanged(String path) {
+        mCurrentPath = path;
+        mActivity.setTabTitle(this, path);
+    }
+    public abstract String getDefaultDirectory();
+    public abstract BaseFile getFile(int i);
+    public abstract void onDeleteFile(String file);
+    public abstract void backPressed();
+    public abstract String getRootFolder();
+    public abstract PasteTask.Callback getPasteCallback();
+    public abstract void getIconForFile(ImageView imageView, int position);
+    public abstract void addFile(String file);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -167,10 +182,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             defaultDir = extras.getString(ARG_PATH);
         }
         if (TextUtils.isEmpty(defaultDir)) {
-            defaultDir = Environment.getExternalStorageDirectory().getPath();
-        }
-        if (TextUtils.isEmpty(defaultDir)) {
-            defaultDir = "/";
+            defaultDir = getDefaultDirectory();
         }
         mCurrentPath = defaultDir;
 
@@ -183,12 +195,11 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
 
         mRefreshLayout =
                 (SwipeRefreshLayout) rootView.findViewById(R.id.swipe_refresh);
-        mRefreshLayout.setColorSchemeColors(ThemeActivity.getAccentColor(getActivity()), Color.RED);
+        mRefreshLayout.setColorSchemeColors(ThemeActivity.getAccentColor(getActivity()));
         mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 onClickFile(mCurrentPath);
-                mRefreshLayout.setRefreshing(false);
             }
         });
 
@@ -203,22 +214,80 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setAdapter(mAdapter);
 
-        filesChanged(mCurrentPath);
+        mProgressDialog = new ProgressDialog(mActivity);
+        mProgressDialog.setMax(100);
 
         return rootView;
     }
+
+    public void showProgressDialog(@StringRes final int title, final boolean indeterminate) {
+        mActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!mProgressDialog.isShowing()) {
+                    mProgressDialog.setTitle(title);
+                    mProgressDialog.setMessage("Please wait...");
+                    mProgressDialog.setIndeterminate(indeterminate);
+                    mProgressDialog.setProgressStyle(indeterminate ?
+                            ProgressDialog.STYLE_SPINNER : ProgressDialog.STYLE_HORIZONTAL);
+                    mProgressDialog.show();
+                }
+            }
+        });
+    }
+
+    public void hideProgressDialog() {
+        mActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mProgressDialog.isShowing()) {
+                    mProgressDialog.hide();
+                }
+            }
+        });
+    }
+
+    protected void showProgress() {
+        mActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mRefreshLayout.setRefreshing(true);
+                //mProgress.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    protected void hideProgress() {
+        mActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mRefreshLayout.setRefreshing(false);
+                //mProgress.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    public void updateProgress(final int val) {
+        mActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mProgressDialog.isShowing()) {
+                    mProgressDialog.setProgress(val);
+                }
+            }
+        });
+    }
+
 
     public boolean onBackPressed() {
         if (mSearchView != null && !mSearchView.isIconified()) {
             mSearchView.setIconified(true);
             return true;
         }
-        if (!mCurrentPath.equals("/")) {
-            File file = new File(mCurrentPath);
-            onClickFile(file.getParent());
-            mRecyclerView.scrollToPosition(mAdapter.indexOf(file.getName()));
+        if (!mCurrentPath.equals(getRootFolder())) {
+            backPressed();
             mExitOnBack = false;
-        } else if (mCurrentPath.equals("/")) {
+        } else if (mCurrentPath.equals(getRootFolder())) {
             if (mExitOnBack) {
                 mActivity.finish();
             } else {
@@ -268,7 +337,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             SelectedFiles.clearAll();
             for (int i = 0; i < mFiles.size(); i++) {
                 if (mMultiSelector.isSelected(i)) {
-                    SelectedFiles.addFile(getFilePath(i));
+                    SelectedFiles.addFile(getFile(i));
                 }
             }
 
@@ -316,6 +385,16 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         //mSearchView.setIconified(searching);
     }
 
+    public void setPathText(final String path) {
+        if (mPath == null) return;
+        mActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mPath.setText(path);
+            }
+        });
+    }
+
     @Override
     public void onClick(View v) {
         /*if (v == mPasteButton) {
@@ -331,11 +410,10 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
 
     public void handleShareFile() {
         ArrayList<Uri> uris = new ArrayList<>();
-        for (String f : SelectedFiles.getFiles()) {
-            File file = new File(f);
+        for (BaseFile file : SelectedFiles.getFiles()) {
             if (file.exists()) {
                 if (!file.isDirectory()) {
-                    uris.add(Uri.fromFile(file));
+                    uris.add(Uri.fromFile(file.getFile()));
                 }
             }
         }
@@ -345,7 +423,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         if (uris.size() == 1) {
             intent.setAction(Intent.ACTION_SEND);
-            intent.setType(MimeUtils.getMimeType(new File(uris.get(0).getPath())));
+            intent.setType(MimeUtils.getMimeType(new File(uris.get(0).getPath()).getName()));
             intent.putExtra(Intent.EXTRA_STREAM, uris.get(0));
         } else {
             intent.setAction(Intent.ACTION_SEND_MULTIPLE);
@@ -368,7 +446,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                 @Override
                 public void onClick(View v) {
                     setSearching(true);
-                    mActivity.closeDrawesrs();
+                    mActivity.closeDrawers();
                     mFiles.clear();
                     mAdapter.notifyDataSetChanged();
                 }
@@ -442,11 +520,11 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 try {
-                    if (FileUtil.getExtension(archive).equals("zip")) {
+                    if (FileUtil.getExtension(archive.getName()).equals("zip")) {
                         onClickFile(new BackgroundUtils(mContext, file,
                                 BackgroundUtils.UNZIP_FILE).execute().get());
-                    } else if (FileUtil.getExtension(archive).equals("tar")
-                            || FileUtil.getExtension(archive).equals("gz")) {
+                    } else if (FileUtil.getExtension(archive.getName()).equals("tar")
+                            || FileUtil.getExtension(archive.getName()).equals("gz")) {
                         onClickFile(new BackgroundUtils(mContext, file,
                                 BackgroundUtils.UNTAR_FILE).execute().get());
                     }
@@ -530,12 +608,12 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
 
         @Override
         public void onBindViewHolder(final BrowserViewHolder holder, final int position) {
-            holder.title.setText(mFiles.get(position).name);
-            IconCache.getIconForFile(mContext, mFiles.get(position).path, holder.icon);
+            holder.title.setText(mFiles.get(position).getName());
+            getIconForFile(holder.icon, position);
 
             DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT,
                     DateFormat.SHORT, Locale.getDefault());
-            File file = new File(mFiles.get(position).path);
+            BaseFile file = mFiles.get(position);
             if (file.isFile()) {
                 holder.info.setText(Utils.displaySize(file.length()));
             } else {
@@ -547,7 +625,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                 holder.info.setText(String.valueOf(num));
             }
             if (mSearching) {
-                holder.date.setText(mFiles.get(position).path);
+                holder.date.setText(mFiles.get(position).getPath());
             } else {
                 holder.date.setText(df.format(file.lastModified()));
             }
@@ -557,21 +635,12 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         public int getItemCount() {
             return mFiles.size();
         }
-
-        public int indexOf(String name) {
-            for (int i = 0; i < getItemCount(); i++) {
-                if (mFiles.get(i).name.equalsIgnoreCase(name)) {
-                    return i;
-                }
-            }
-            return 0;
-        }
     }
 
     public void removeFile(String file) {
         int id = -1;
         for (int i = 0; i < mFiles.size(); i++) {
-            if (mFiles.get(i).path.equals(file)) {
+            if (mFiles.get(i).getPath().equals(file)) {
                 id = i;
                 break;
             }
@@ -579,15 +648,6 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         if (id == -1) return;
         mFiles.remove(id);
         mAdapter.notifyItemRemoved(id);
-    }
-
-    public void addFile(String file) {
-        Item item = new Item();
-        item.path = file;
-        item.name = new File(file).getName();
-        mFiles.add(item);
-        sortFiles();
-        mAdapter.notifyItemInserted(mFiles.indexOf(item));
     }
 
     protected void sortFiles() {
@@ -622,7 +682,10 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             switch (id) {
                 case MENU_DELETE:
                     if (SelectedFiles.getFiles().size() == 1) {
-                        builder.setTitle(SelectedFiles.getFiles().get(0));
+                        BaseFile file = SelectedFiles.getFiles().get(0);
+                        if (file != null) {
+                            builder.setTitle(file.getName());
+                        }
                     } else {
                         builder.setTitle(R.string.delete_dialog_title);
                     }
@@ -631,24 +694,18 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    for (String file : SelectedFiles.getFiles()) {
-                                        if (FileUtil.deleteFile(getActivity(), file)) {
-                                            getOwner().removeFile(file);
-                                        } else {
-                                            Toast.makeText(getOwner().mContext,
-                                                    "Failed to delete file: "
-                                                            + new File(file).getName(),
-                                                    Toast.LENGTH_SHORT).show();
-                                        }
+                                    for (BaseFile file : SelectedFiles.getFiles()) {
+                                        getOwner().onDeleteFile(file.getRealPath());
                                     }
                                     SelectedFiles.clearAll();
                                     dialog.dismiss();
+                                    getOwner().filesChanged(getOwner().getCurrentPath());
                                 }
                             });
                     builder.setNegativeButton(R.string.cancel, null);
                     return builder.create();
                 case MENU_PERMISSIONS:
-                    String path = SelectedFiles.getFiles().get(0);
+                    String path = SelectedFiles.getFiles().get(0).getPath();
                     if (TextUtils.isEmpty(path)) return null;
                     PermissionsDialog dialog = new PermissionsDialog(
                             getOwner().mContext, path);
@@ -660,7 +717,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                     final EditText folderName = (EditText) view.findViewById(R.id.folder_name);
                     final File file;
                     if (SelectedFiles.getFiles().size() > 0) {
-                        file = new File(SelectedFiles.getFiles().get(0));
+                        file = SelectedFiles.getFiles().get(0).getFile();
                     } else {
                         file = new File("");
                     }
@@ -753,7 +810,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                     final Spinner archiveType = (Spinner) v.findViewById(R.id.archive_type);
                     final EditText archiveName = (EditText) v.findViewById(R.id.archive_name);
                     if (SelectedFiles.getFiles().size() == 1) {
-                        builder.setTitle(new File(SelectedFiles.getFiles().get(0)).getName());
+                        builder.setTitle(SelectedFiles.getFiles().get(0).getName());
                     } else {
                         builder.setTitle("Create Archive.");
                     }
@@ -768,7 +825,6 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                             }
                             String type = String.valueOf(archiveType.getSelectedItem());
                             String name = archiveName.getText().toString();
-                            Log.d("TEST", "type=" + type);
                             try {
                                 switch (type) {
                                     case "zip":
@@ -814,13 +870,15 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         }
 
         public void onClick(View view) {
+            if (BuildConfig.DEBUG) Log.d("TEST", "onClick");
             boolean b = mMultiSelector.tapSelection(this);
             if (mMultiSelector.getSelectedPositions().size() == 0) {
                 mMultiSelector.setSelectable(false);
                 if (mActionMode != null) mActionMode.finish();
             }
             if (!b) {
-                onClickFile(mFiles.get(getAdapterPosition()).path);
+                Log.d("TEST", "!b");
+                onClickFile(mFiles.get(getAdapterPosition()).getRealPath());
             }
             if (mActionMode != null && !b) {
                 mActionMode.finish();
@@ -829,7 +887,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
 
         public boolean onLongClick(View view) {
             if (!mSupportsActionMode) return false;
-            mActivity.startActionMode(mMultiSelect);
+            mActivity.getToolbar().startActionMode(mMultiSelect);
             mMultiSelector.setSelectable(true);
             mMultiSelector.setSelected(this, true);
             return true;
@@ -841,11 +899,20 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             filePicked(file);
             return;
         }
-        String ext = FileUtil.getExtension(file);
+        String ext = FileUtil.getExtension(file.getName());
         if (ext.equals("zip") || ext.equals("tar") || ext.equals("gz")) {
             onClickArchive(file.getAbsolutePath());
         } else {
             Utils.onClickFile(mContext, file.getAbsolutePath());
         }
+    }
+
+    public void toast(final String message) {
+        mActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
