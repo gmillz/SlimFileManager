@@ -43,7 +43,6 @@ import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
 import com.slim.slimfilemanager.multichoice.MultiChoiceViewHolder;
 import com.slim.slimfilemanager.multichoice.MultiSelector;
-import com.slim.slimfilemanager.settings.SettingsProvider;
 import com.slim.slimfilemanager.utils.BackgroundUtils;
 import com.slim.slimfilemanager.utils.FileUtil;
 import com.slim.slimfilemanager.utils.FragmentLifecycle;
@@ -51,7 +50,6 @@ import com.slim.slimfilemanager.utils.MimeUtils;
 import com.slim.slimfilemanager.utils.PasteTask;
 import com.slim.slimfilemanager.utils.PasteTask.SelectedFiles;
 import com.slim.slimfilemanager.utils.PermissionsDialog;
-import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.slimfilemanager.utils.SortUtils;
 import com.slim.slimfilemanager.utils.Utils;
 import com.slim.slimfilemanager.utils.file.BaseFile;
@@ -59,9 +57,9 @@ import com.slim.slimfilemanager.utils.file.BasicFile;
 import com.slim.slimfilemanager.widget.DividerItemDecoration;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -73,16 +71,18 @@ import butterknife.ButterKnife;
 public abstract class BaseBrowserFragment extends Fragment implements View.OnClickListener,
         FragmentLifecycle, SearchView.OnQueryTextListener {
 
-    private static final int MENU_COPY = 1001;
-    private static final int MENU_CUT = 1002;
-    private static final int MENU_DELETE = 1003;
-    private static final int MENU_PERMISSIONS = 1004;
-    private static final int MENU_RENAME = 1005;
-    private static final int MENU_SHARE = 1006;
-    private static final int MENU_ARCHIVE = 1007;
+    protected static final int MENU_COPY = 1001;
+    protected static final int MENU_CUT = 1002;
+    protected static final int MENU_DELETE = 1003;
+    protected static final int MENU_PERMISSIONS = 1004;
+    protected static final int MENU_RENAME = 1005;
+    protected static final int MENU_SHARE = 1006;
+    protected static final int MENU_ARCHIVE = 1007;
 
     public static final int ACTION_ADD_FOLDER = 10001;
     public static final int ACTION_ADD_FILE = 10002;
+
+    protected List<Integer> ACTIONS = new ArrayList<>();
 
     protected static final String ARG_PATH = "path";
 
@@ -97,7 +97,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
     protected boolean mSupportsActionMode = true;
     protected boolean mSupportsSearching = true;
 
-    private ActionMode mActionMode;
+    protected ActionMode mActionMode;
     @Bind(R.id.path) TextView mPath;
     private SearchView mSearchView;
     @Bind(R.id.swipe_refresh) SwipeRefreshLayout mRefreshLayout;
@@ -127,11 +127,18 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
     public abstract String getRootFolder();
     public abstract PasteTask.Callback getPasteCallback();
     public abstract void getIconForFile(ImageView imageView, int position);
-    public abstract void addFile(String file);
+    public abstract void addFile(String path);
+    public abstract void addNewFile(String name, boolean isFolder);
+    public abstract void renameFile(BaseFile file, String name);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ACTIONS.add(MENU_COPY);
+        ACTIONS.add(MENU_DELETE);
+        ACTIONS.add(MENU_RENAME);
+        ACTIONS.add(MENU_SHARE);
 
         mContext = getActivity();
         mActivity = (FileManager) getActivity();
@@ -337,6 +344,13 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                     mMultiSelector.getSelectedPositions().size() == 1);
             menu.findItem(MENU_RENAME).setVisible(
                     mMultiSelector.getSelectedPositions().size() == 1);
+
+            Log.d("TEST", "menu size=" + menu.size());
+            for (int i = 0; i < menu.size(); i++) {
+                MenuItem item = menu.getItem(i);
+                Log.d("TEST", "itemId=" + item.getItemId());
+                item.setVisible(ACTIONS.contains(item.getItemId()));
+            }
             return true;
         }
 
@@ -609,8 +623,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             LayoutInflater inflater = (LayoutInflater) mContext
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View v = inflater.inflate(R.layout.item, parent, false);
-            BrowserViewHolder vh = new BrowserViewHolder(v);
-            return vh;
+            return new BrowserViewHolder(v);
         }
 
         @Override
@@ -722,26 +735,21 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                 case MENU_RENAME:
                     View view = View.inflate(getOwner().mContext, R.layout.add_folder, null);
                     final EditText folderName = findById(view, R.id.folder_name);
-                    File fil = null;
+                    final BaseFile baseFile;
                     if (SelectedFiles.getFiles().size() > 0) {
-                        BaseFile f = SelectedFiles.getFiles().get(0);
-                        if (f instanceof BasicFile) {
-                            fil = (File) f.getRealFile();
-                        }
+                        baseFile = SelectedFiles.getFiles().get(0);
+                    } else {
+                        baseFile = BaseFile.getBlankFile();
                     }
-                    if (fil == null) {
-                        fil = new File("");
-                    }
-                    final File file = fil;
                     if (id == ACTION_ADD_FOLDER) {
                         builder.setTitle(R.string.create_folder);
                         folderName.setHint(R.string.folder_name_hint);
-                    } else if (id == ACTION_ADD_FILE){
+                    } else if (id == ACTION_ADD_FILE) {
                         builder.setTitle(R.string.create_file);
                         folderName.setHint(R.string.file_name_hint);
                     } else {
-                        builder.setTitle(file.getName());
-                        folderName.setText(file.getName());
+                        builder.setTitle(baseFile.getName());
+                        folderName.setText(baseFile.getName());
                     }
                     builder.setView(view);
                     View.OnClickListener listener = new View.OnClickListener() {
@@ -751,61 +759,11 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                                 dismiss();
                             } else if (v.getId() == R.id.create) {
                                 if (id == ACTION_ADD_FILE || id == ACTION_ADD_FOLDER) {
-                                    File newFolder = new File(getOwner().getCurrentPath()
-                                            + File.separator
-                                            + folderName.getText().toString());
-                                    if (newFolder.exists()) {
-                                        if (id == ACTION_ADD_FILE) {
-                                            Toast.makeText(getActivity(), R.string.file_exists,
-                                                    Toast.LENGTH_SHORT).show();
-                                        } else {
-                                            Toast.makeText(getActivity(), R.string.folder_exists,
-                                                    Toast.LENGTH_SHORT).show();
-                                        }
-                                        return;
-                                    }
-                                    if (id == ACTION_ADD_FOLDER) {
-                                        if (!newFolder.exists()) {
-                                            if (!newFolder.mkdirs()) {
-                                                if (SettingsProvider.getBoolean(getActivity(),
-                                                        SettingsProvider.KEY_ENABLE_ROOT, false)
-                                                        && RootUtils.isRootAvailable()) {
-                                                    if (!RootUtils.createFolder(newFolder)) {
-                                                        Toast.makeText(getOwner().getActivity(),
-                                                                R.string.unable_to_create_folder,
-                                                                Toast.LENGTH_SHORT).show();
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        try {
-                                            if (!newFolder.exists()) {
-                                                if (newFolder.getParentFile().canWrite()) {
-                                                    if (!newFolder.createNewFile()) {
-                                                        Toast.makeText(getOwner().mContext,
-                                                                R.string.unable_to_create_file,
-                                                                Toast.LENGTH_SHORT).show();
-                                                    }
-                                                } else if (!RootUtils.createFile(newFolder)) {
-                                                    Toast.makeText(getOwner().mContext,
-                                                            R.string.unable_to_create_file,
-                                                            Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                    if (newFolder.exists()) {
-                                        getOwner().addFile(newFolder.getPath());
-                                    }
+                                    getOwner().addNewFile(folderName.getText().toString(),
+                                            id == ACTION_ADD_FOLDER);
                                 } else {
-                                    File newFile = new File(file.getParent()
-                                            + File.separator + folderName.getText().toString());
-                                    FileUtil.renameFile(getOwner().mContext, file, newFile);
-                                    getOwner().removeFile(file.getAbsolutePath());
-                                    getOwner().addFile(newFile.getAbsolutePath());
+                                    getOwner().renameFile(baseFile,
+                                            folderName.getText().toString());
                                 }
                                 dismiss();
                             }
@@ -916,6 +874,10 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         } else {
             Utils.onClickFile(mContext, file.getAbsolutePath());
         }
+    }
+
+    public void toast(@StringRes int id) {
+        toast(mContext.getString(id));
     }
 
     public void toast(final String message) {

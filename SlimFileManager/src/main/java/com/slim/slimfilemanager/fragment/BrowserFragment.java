@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.slim.slimfilemanager.R;
+import com.slim.slimfilemanager.settings.SettingsProvider;
 import com.slim.slimfilemanager.utils.FileUtil;
 import com.slim.slimfilemanager.utils.IconCache;
 import com.slim.slimfilemanager.utils.MimeUtils;
@@ -17,6 +18,7 @@ import com.slim.slimfilemanager.utils.file.BaseFile;
 import com.slim.slimfilemanager.utils.file.BasicFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +30,15 @@ public class BrowserFragment extends BaseBrowserFragment {
         args.putString(ARG_PATH, path);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+
+        ACTIONS.add(MENU_CUT);
+        ACTIONS.add(MENU_PERMISSIONS);
+        ACTIONS.add(MENU_ARCHIVE);
     }
 
     @Override
@@ -162,10 +173,55 @@ public class BrowserFragment extends BaseBrowserFragment {
     }
 
     @Override
-    public void addFile(String file) {
-        BasicFile bf = new BasicFile(mContext, new File(file));
+    public void addNewFile(String name, boolean isFolder) {
+        File newFile = new File(mCurrentPath + File.separator + name);
+        if (newFile.exists()) {
+            toast(isFolder ? R.string.folder_exists : R.string.file_exists);
+            return;
+        }
+
+        boolean success = true;
+        if (isFolder) {
+            if (!newFile.mkdirs()) {
+                if (SettingsProvider.getBoolean(mContext, SettingsProvider.KEY_ENABLE_ROOT, false)
+                        && RootUtils.isRootAvailable() && !RootUtils.createFolder(newFile)) {
+                    success = false;
+                }
+            }
+        } else {
+            try {
+                if (!newFile.exists()) {
+                    if (newFile.getParentFile().canWrite()) {
+                        if (!newFile.createNewFile()) {
+                            success = false;
+                        }
+                    } else if (SettingsProvider.getBoolean(mContext,
+                            SettingsProvider.KEY_ENABLE_ROOT, false) &&
+                            RootUtils.isRootAvailable() && !RootUtils.createFile(newFile)) {
+                        success = false;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if (!success) {
+            toast(isFolder ? R.string.unable_to_create_folder : R.string.unable_to_create_file);
+        }
+    }
+
+    public void addFile(String path) {
+        BasicFile bf = new BasicFile(mContext, new File(path));
         mFiles.add(bf);
         sortFiles();
         mAdapter.notifyItemInserted(mFiles.indexOf(bf));
+    }
+
+    @Override
+    public void renameFile(BaseFile file, String name) {
+        File newFile = new File(file.getParent() + File.separator + name);
+        FileUtil.renameFile(mContext, (File) file.getRealFile(), newFile);
+        removeFile(file.getRealPath());
+        addFile(newFile.getAbsolutePath());
     }
 }

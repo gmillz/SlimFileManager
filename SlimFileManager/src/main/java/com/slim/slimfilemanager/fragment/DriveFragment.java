@@ -31,6 +31,7 @@ import com.slim.slimfilemanager.services.drive.DriveFiles;
 import com.slim.slimfilemanager.services.drive.DriveUtils;
 import com.slim.slimfilemanager.services.drive.IconCache;
 import com.slim.slimfilemanager.services.drive.ListFiles;
+import com.slim.slimfilemanager.utils.MimeUtils;
 import com.slim.slimfilemanager.utils.PasteTask;
 import com.slim.slimfilemanager.utils.file.BaseFile;
 import com.slim.slimfilemanager.utils.file.DriveFile;
@@ -340,6 +341,47 @@ public class DriveFragment extends BaseBrowserFragment {
     @Override
     public void addFile(String f) {
         // TODO implement
+    }
+
+    @Override
+    public void addNewFile(final String name, final boolean isFolder) {
+        mExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                String parentId;
+                if (mCurrentPath.equalsIgnoreCase(getRootFolder())) {
+                    parentId = DriveFiles.getRootId();
+                } else {
+                    parentId = mCurrentPath;
+                }
+                String mimeType;
+                if (isFolder) {
+                    mimeType = DriveFile.FOLDER_TYPE;
+                } else {
+                    mimeType = MimeUtils.getMimeType(name);
+                }
+                com.google.api.services.drive.model.File f =
+                        DriveUtils.createFile(mDrive, name, "", parentId, mimeType);
+                if (f != null) {
+                    DriveFiles.insertFile(f);
+                    filesChanged(mCurrentPath);
+                } else {
+                    toast("Failed.");
+                }
+
+            }
+        });
+    }
+
+    @Override
+    public void renameFile(final BaseFile file, final String name) {
+        mExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                DriveUtils.renameFile(mDrive,
+                        (com.google.api.services.drive.model.File) file.getRealFile(), name);
+            }
+        });
     }
 
     @Override

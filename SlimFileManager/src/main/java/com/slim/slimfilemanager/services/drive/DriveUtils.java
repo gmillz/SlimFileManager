@@ -128,7 +128,28 @@ public class DriveUtils {
                 file.getAbsolutePath());
     }
 
-    private static File insertFile(Drive service, String title, String description,
+    public static File createFile(Drive service, String title, String description,
+                                  String parentId, String mimeType) {
+        // File's metadata
+        File body = new File();
+        body.setTitle(title);
+        body.setDescription(description);
+        body.setMimeType(mimeType);
+
+        // Set the parent folder
+        if (parentId != null && parentId.length() > 0) {
+            body.setParents(Arrays.asList(new ParentReference().setId(parentId)));
+        }
+
+        try {
+            return service.files().insert(body).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static File insertFile(Drive service, String title, String description,
                                    String parentId, String mimeType, String filename) {
         // File's metadata.
         File body = new File();
@@ -145,6 +166,7 @@ public class DriveUtils {
         // File's content.
         java.io.File fileContent = new java.io.File(filename);
         FileContent mediaContent = new FileContent(mimeType, fileContent);
+
         try {
             File file = service.files().insert(body, mediaContent).execute();
 

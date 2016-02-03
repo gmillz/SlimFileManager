@@ -1,6 +1,5 @@
 package com.slim.slimfilemanager.utils.file;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
 import com.dropbox.client2.DropboxAPI;
@@ -21,15 +20,12 @@ public class DropboxFile extends BaseFile {
     private DropboxAPI.Entry mEntry;
     private String mRemotePath;
     private boolean mExists = true;
-    private Context mContext;
 
-    public DropboxFile(Context context,
-                       DropboxAPI<AndroidAuthSession> api, DropboxAPI.Entry entry) {
+    public DropboxFile(DropboxAPI<AndroidAuthSession> api, DropboxAPI.Entry entry) {
         mAPI = api;
         mEntry = entry;
         mExists = !mEntry.isDeleted;
         mRemotePath = entry.path;
-        mContext = context;
     }
 
     @Override
@@ -114,12 +110,7 @@ public class DropboxFile extends BaseFile {
 
     @Override
     public String[] list() {
-        if (mEntry.contents == null || mEntry.contents.isEmpty()) return new String[0];
-        String[] contents = new String[mEntry.contents.size()];
-        for (int i = 0; i < mEntry.contents.size(); i++) {
-            contents[i] = mEntry.contents.get(i).fileName();
-        }
-        return contents;
+        return new String[0];
     }
 
     @Override

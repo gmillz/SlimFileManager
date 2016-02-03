@@ -18,6 +18,7 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.services.dropbox.DropBoxConstants;
 import com.slim.slimfilemanager.services.dropbox.DropboxLoginActivity;
+import com.slim.slimfilemanager.services.dropbox.DropboxUtils;
 import com.slim.slimfilemanager.services.dropbox.IconCache;
 import com.slim.slimfilemanager.services.dropbox.ListFiles;
 import com.slim.slimfilemanager.utils.PasteTask;
@@ -54,7 +55,7 @@ public class DropboxFragment extends BaseBrowserFragment {
             if (!mFiles.isEmpty()) mFiles.clear();
             mAdapter.notifyDataSetChanged();
             for (DropboxAPI.Entry entry : entries) {
-                DropboxFile df = new DropboxFile(mContext, mAPI, entry);
+                DropboxFile df = new DropboxFile(mAPI, entry);
                 mFiles.add(df);
                 sortFiles();
                 mAdapter.notifyItemInserted(mFiles.indexOf(df));
@@ -84,13 +85,15 @@ public class DropboxFragment extends BaseBrowserFragment {
         if (!mAPI.getSession().isLinked()) {
             startActivityForResult(
                     new Intent(mActivity, DropboxLoginActivity.class), LOGIN_REQUEST);
+        } else {
+            filesChanged(mCurrentPath);
         }
-        filesChanged(mCurrentPath);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.d("TEST", "requestCode == " + requestCode + " : resultCode == " + resultCode);
         if (requestCode == LOGIN_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
                 filesChanged("/");
@@ -158,7 +161,7 @@ public class DropboxFragment extends BaseBrowserFragment {
                     DropboxAPI.Entry entry = mAPI.metadata(
                             path, DropBoxConstants.MAX_COUNT, null, true, null);
 
-                    return new DropboxFile(mContext, mAPI, entry);
+                    return new DropboxFile(mAPI, entry);
                 } catch (DropboxException e) {
                     e.printStackTrace();
                     return null;
@@ -237,33 +240,15 @@ public class DropboxFragment extends BaseBrowserFragment {
                             f.getFile(new BaseFile.GetFileCallback() {
                                 @Override
                                 public void onGetFile(File file) {
-                                    try {
-                                        if (file.exists()) {
-                                            FileInputStream fis = new FileInputStream(file);
-                                            String dropboxPath =
-                                                    mCurrentPath + File.separator + file.getName();
-                                            DropboxAPI.UploadRequest request =
-                                                    mAPI.putFileOverwriteRequest(
-                                                            dropboxPath, fis, file.length(),
-                                                            new ProgressListener() {
-                                                                @Override
-                                                                public long progressInterval() {
-                                                                    return 500;
-                                                                }
-
-                                                                @Override
-                                                                public void onProgress(
-                                                                        long l, long l1) {
-                                                                    publishProgress(l, l1);
-                                                                }
-                                                            });
-                                             if (request != null) {
-                                                 request.upload();
-                                             }
-                                        }
-                                    } catch (IOException | DropboxException e) {
-                                        // ignore
-                                    }
+                                    String dropboxPath = mCurrentPath
+                                            + File.separator + file.getName();
+                                    DropboxUtils.uploadFile(mAPI, dropboxPath, file,
+                                            new DropboxUtils.Callback() {
+                                                @Override
+                                                public void updateProgress(int progress) {
+                                                    DropboxFragment.this.updateProgress(progress);
+                                                }
+                                    });
                                 }
                             });
                         }
@@ -273,13 +258,6 @@ public class DropboxFragment extends BaseBrowserFragment {
                     @Override
                     protected void onPostExecute(Boolean b) {
                         hideProgressDialog();
-                    }
-
-                    @Override
-                    protected void onProgressUpdate(Long... progress) {
-                        int percent = (int)
-                                (100.0 * (double) progress[0] / progress[1] + 0.5);
-                        updateProgress(percent);
                     }
                 }.executeOnExecutor(mExecutor);
             }
@@ -299,6 +277,46 @@ public class DropboxFragment extends BaseBrowserFragment {
     @Override
     public void addFile(String path) {
         // TODO
+    }
+
+    @Override
+    public void addNewFile(final String name, final boolean isFolder) {
+        mExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (isFolder) {
+                        mAPI.createFolder(mCurrentPath + File.separator + name);
+                    } else {
+                        File tempFile = new File(Utils.getCacheDir() + File.separator + "temp"
+                                + name);
+                        if (!tempFile.getParentFile().exists()) {
+                            tempFile.getParentFile().mkdirs();
+                        }
+                        if (tempFile.createNewFile()) {
+                            String path = mCurrentPath + File.separator + name;
+                            DropboxUtils.uploadFile(mAPI, path, tempFile, null);
+                        }
+                    }
+                } catch (DropboxException|IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void renameFile(final BaseFile file, final String name) {
+        mExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mAPI.move(file.getRealPath(), file.getParent() + "/" + name);
+                } catch (DropboxException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override

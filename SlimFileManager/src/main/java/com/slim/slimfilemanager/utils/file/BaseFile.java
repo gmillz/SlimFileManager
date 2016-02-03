@@ -28,4 +28,72 @@ public abstract class BaseFile {
     public interface GetFileCallback {
         void onGetFile(File file);
     }
+
+    public static BaseFile getBlankFile() {
+        return new BaseFile() {
+            @Override
+            public boolean delete() {
+                return false;
+            }
+
+            @Override
+            public boolean exists() {
+                return false;
+            }
+
+            @Override
+            public String getName() {
+                return "";
+            }
+
+            @Override
+            public String getParent() {
+                return "";
+            }
+
+            @Override
+            public String getPath() {
+                return "";
+            }
+
+            @Override
+            public String getRealPath() {
+                return "";
+            }
+
+            @Override
+            public boolean isDirectory() {
+                return false;
+            }
+
+            @Override
+            public void getFile(GetFileCallback callback) {
+            }
+
+            @Override
+            public long length() {
+                return 0;
+            }
+
+            @Override
+            public String[] list() {
+                return new String[0];
+            }
+
+            @Override
+            public String getExtension() {
+                return "";
+            }
+
+            @Override
+            public long lastModified() {
+                return 0;
+            }
+
+            @Override
+            public Object getRealFile() {
+                return new Object();
+            }
+        };
+    }
 }
