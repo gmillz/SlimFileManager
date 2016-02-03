@@ -2,7 +2,6 @@ package com.slim.slimfilemanager.services.drive;
 
 import android.os.AsyncTask;
 import android.util.ArrayMap;
-import android.util.Log;
 
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
@@ -38,7 +37,6 @@ public class DriveFiles extends HashMap<File, ArrayList<File>> {
                 INSTANCE.mIndex.clear();
             }
             protected Void doInBackground(Void... v) {
-                Log.d("TEST", "TESTING");
                 List<File> result = new ArrayList<>();
                 try {
                     Drive.Files.List request = drive.files().list().setMaxResults(1000);
@@ -61,7 +59,6 @@ public class DriveFiles extends HashMap<File, ArrayList<File>> {
                 for (File file : result) {
                     List<ParentReference> parents = file.getParents();
                     for (ParentReference parent : parents) {
-                        Log.d("TEST", "file=" + file.getTitle());
                         if (!contains(parent.getId())) {
                             try {
                                 File parentFile = drive.files().get(parent.getId()).execute();

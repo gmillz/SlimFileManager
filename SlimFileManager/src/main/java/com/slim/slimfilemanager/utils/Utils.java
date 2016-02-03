@@ -5,14 +5,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Environment;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.slim.slimfilemanager.R;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
@@ -103,20 +100,6 @@ public class Utils {
             displaySize = String.valueOf(size) + " bytes";
         }
         return displaySize;
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static String getProperty(String name) {
-        String value = null;
-        try {
-            Class c = Class.forName("android.os.SystemProperties");
-            Method m = c.getMethod("get", String.class);
-            value = (String) m.invoke(null, name);
-        } catch (ClassNotFoundException|NoSuchMethodException
-                |IllegalAccessException|InvocationTargetException e) {
-            e.printStackTrace();
-        }
-        return value;
     }
 
     public static int darkenColor(int color) {

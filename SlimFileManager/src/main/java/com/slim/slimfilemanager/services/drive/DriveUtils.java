@@ -2,7 +2,7 @@ package com.slim.slimfilemanager.services.drive;
 
 import android.os.FileObserver;
 import android.text.TextUtils;
-import android.util.Log;
+import trikita.log.Log;
 
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.GenericUrl;

@@ -7,11 +7,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.FileObserver;
 import android.text.TextUtils;
-import android.util.Log;
+import trikita.log.Log;
 import android.widget.ImageView;
 
 import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
 import com.dropbox.client2.session.AppKeyPair;
@@ -36,8 +35,6 @@ import java.util.ArrayList;
 
 
 public class DropboxFragment extends BaseBrowserFragment {
-
-    private static final String TAG = DropboxFragment.class.getName();
 
     private static final int LOGIN_REQUEST = 10101;
 
@@ -93,7 +90,6 @@ public class DropboxFragment extends BaseBrowserFragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("TEST", "requestCode == " + requestCode + " : resultCode == " + resultCode);
         if (requestCode == LOGIN_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
                 filesChanged("/");
@@ -121,7 +117,7 @@ public class DropboxFragment extends BaseBrowserFragment {
                                 + StringUtils.replace(path, "/", "_"));
                         if (cacheFile.exists()) {
                             if (!cacheFile.delete())
-                                Log.e(TAG, "Unable to delete " + cacheFile.getAbsolutePath());
+                                Log.e("Unable to delete " + cacheFile.getAbsolutePath());
                         }
                         FileOutputStream outputStream = new FileOutputStream(cacheFile);
                         mAPI.getFile(path, entry.rev, outputStream, null);

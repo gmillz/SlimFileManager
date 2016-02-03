@@ -19,7 +19,6 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -37,7 +36,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.slim.slimfilemanager.BuildConfig;
 import com.slim.slimfilemanager.FileManager;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
@@ -345,10 +343,8 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             menu.findItem(MENU_RENAME).setVisible(
                     mMultiSelector.getSelectedPositions().size() == 1);
 
-            Log.d("TEST", "menu size=" + menu.size());
             for (int i = 0; i < menu.size(); i++) {
                 MenuItem item = menu.getItem(i);
-                Log.d("TEST", "itemId=" + item.getItemId());
                 item.setVisible(ACTIONS.contains(item.getItemId()));
             }
             return true;
@@ -839,14 +835,12 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         }
 
         public void onClick(View view) {
-            if (BuildConfig.DEBUG) Log.d("TEST", "onClick");
             boolean b = mMultiSelector.tapSelection(this);
             if (mMultiSelector.getSelectedPositions().size() == 0) {
                 mMultiSelector.setSelectable(false);
                 if (mActionMode != null) mActionMode.finish();
             }
             if (!b) {
-                Log.d("TEST", "!b");
                 onClickFile(mFiles.get(getAdapterPosition()).getRealPath());
             }
             if (mActionMode != null && !b) {

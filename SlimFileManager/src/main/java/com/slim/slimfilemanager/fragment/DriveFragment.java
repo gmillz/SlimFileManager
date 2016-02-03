@@ -11,7 +11,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -128,7 +127,6 @@ public class DriveFragment extends BaseBrowserFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        Log.d("TEST", "onActivityCreated");
 
         mActivity.addActivityCallback(mActivityCallback);
 
@@ -156,17 +154,13 @@ public class DriveFragment extends BaseBrowserFragment {
     @Override
     public void onClickFile(final String path) {
         //if (TextUtils.isEmpty(path)) return;
-        Log.d("TEST", "onClickFile(" + path + ")");
-        Log.d("TEST", "rootFolder=" + getRootFolder());
         if (path.equals(getRootFolder())) {
-            Log.d("TEST", "path equals " + getRootFolder());
             filesChanged(path);
             setPathText(path);
             return;
         }
         final com.google.api.services.drive.model.File file = DriveFiles.get(path);
         if (file == null || file.getMimeType() == null) {
-            Log.d("TEST", "file is null");
             return;
         }
         if (file.getMimeType().equals(DriveFile.FOLDER_TYPE)) {
@@ -178,7 +172,6 @@ public class DriveFragment extends BaseBrowserFragment {
                 updatePathText(file);
             }
         } else {
-            Log.d("TEST", "name=" + file.getTitle());
             showProgressDialog(R.string.downloading, true);
             mExecutor.execute(new Runnable() {
                 @Override
@@ -212,13 +205,10 @@ public class DriveFragment extends BaseBrowserFragment {
     @Override
     public void filesChanged(String path) {
         super.filesChanged(path);
-        Log.d("TEST", "path=" + path);
         if (mCredential.getSelectedAccountName() == null) {
-            Log.d("TEST", "choosing account");
             chooseAccount();
         } else {
             if (isDeviceOnline()) {
-                Log.d("TEST", "here");
                 showProgress();
                 if (!mFiles.isEmpty()) mFiles.clear();
                 mAdapter.notifyDataSetChanged();

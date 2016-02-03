@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.dropbox.client2.DropboxAPI;
@@ -52,11 +51,6 @@ public class IconCache {
     public static Object getImage(Context context, DropboxAPI api, DropboxAPI.Entry entry) {
 
         Object object = null;
-        //int width = (int) context.getResources().getDimension(R.dimen.item_height);
-
-        Log.d("TEST", "entry.name=" + entry.fileName());
-        Log.d("TEST", "entry.icon=" + entry.icon);
-        Log.d("TEST", "entry.mimeType=" + entry.mimeType);
 
         if (entry.thumbExists) {
             try {

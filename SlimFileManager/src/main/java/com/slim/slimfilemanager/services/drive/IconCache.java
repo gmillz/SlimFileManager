@@ -10,7 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
+import trikita.log.Log;
 import android.widget.ImageView;
 
 import com.google.api.services.drive.Drive;

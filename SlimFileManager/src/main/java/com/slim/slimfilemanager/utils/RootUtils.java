@@ -1,7 +1,7 @@
 package com.slim.slimfilemanager.utils;
 
 import android.text.TextUtils;
-import android.util.Log;
+import trikita.log.Log;
 
 import org.apache.commons.io.IOUtils;
 

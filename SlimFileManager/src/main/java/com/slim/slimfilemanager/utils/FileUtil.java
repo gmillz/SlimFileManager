@@ -2,7 +2,7 @@ package com.slim.slimfilemanager.utils;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
+import trikita.log.Log;
 
 import com.slim.slimfilemanager.settings.SettingsProvider;
 

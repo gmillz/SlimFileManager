@@ -16,7 +16,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Bundle;
-import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v13.app.FragmentStatePagerAdapter;
@@ -29,7 +28,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,7 +36,6 @@ import android.view.ViewGroup;
 import com.appeaser.sublimenavigationviewlibrary.OnNavigationMenuEventListener;
 import com.appeaser.sublimenavigationviewlibrary.SublimeBaseMenuItem;
 import com.appeaser.sublimenavigationviewlibrary.SublimeGroup;
-import com.appeaser.sublimenavigationviewlibrary.SublimeMenu;
 import com.appeaser.sublimenavigationviewlibrary.SublimeNavigationView;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
@@ -147,7 +144,6 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("TEST", "onActivityResult");
         for (ActivityCallback callback : mCallbacks) {
             callback.onActivityResult(requestCode, resultCode, data);
         }
@@ -674,6 +670,8 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     public void onTrimMemory(int level) {
         if (level >= Activity.TRIM_MEMORY_MODERATE) {
             IconCache.clearCache();
+            com.slim.slimfilemanager.services.drive.IconCache.clearCache();
+            com.slim.slimfilemanager.services.dropbox.IconCache.clearCache();
         }
     }
 
