@@ -1,12 +1,13 @@
 package com.slim.slimfilemanager.utils;
 
+import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.BufferedReader;
+import org.apache.commons.io.IOUtils;
+
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -14,75 +15,53 @@ public class RootUtils {
 
     protected final static Pattern sEscape = Pattern.compile("([\"\'`\\\\])");
 
+    public static class CommandOutput {
+        String output;
+        String error;
+        int exitCode;
+    }
+
     public static ArrayList<String> listFiles(String path, boolean showHidden) {
         if (!isRootAvailable()) return null;
         ArrayList<String> mDirContent = new ArrayList<>();
-        BufferedReader in;
-
-        try {
-            in = runCommand("ls -a " + "\"" + path + "\"\n");
-
-            if (in == null) return null;
-
-            String line;
-            while ((line = in.readLine()) != null) {
-                if (!showHidden) {
-                    if (line.charAt(0) != '.')
-                        mDirContent.add(path + "/" + line);
-                } else {
-                    mDirContent.add(path + "/" + line);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        CommandOutput output = runCommand("ls -a " + "\"" + path + "\"\n");
+        if (output == null) {
+            return mDirContent;
         }
-
+        String[] split = output.output.split("\n");
+        for (String line : split) {
+            if (!showHidden) {
+                if (line.charAt(0) != '.')
+                    mDirContent.add(path + "/" + line);
+            } else {
+                mDirContent.add(path + "/" + line);
+            }
+        }
         return mDirContent;
     }
 
-    public static BufferedReader runCommand(String cmd) {
+    public static CommandOutput runCommand(String cmd) {
         if (!isRootAvailable()) return null;
-        BufferedReader reader;
+        CommandOutput output = new CommandOutput();
         try {
             Process process = Runtime.getRuntime().exec("su");
             DataOutputStream os = new DataOutputStream(
                     process.getOutputStream());
             os.writeBytes(cmd + "\n");
             os.writeBytes("exit\n");
-            reader = new BufferedReader(new InputStreamReader(
-                    process.getInputStream()));
-            String err = (new BufferedReader(new InputStreamReader(
-                    process.getErrorStream()))).readLine();
             os.flush();
 
-            if (process.waitFor() != 0 || (!"".equals(err) && null != err)) {
-                Log.e("Root Error, cmd: " + cmd, "error: " + err);
-                return null;
+            output.exitCode = process.waitFor();
+            output.output = IOUtils.toString(process.getInputStream());
+            output.error = IOUtils.toString(process.getErrorStream());
+
+            if (output.exitCode != 0 || (!TextUtils.isEmpty(output.error))) {
+                Log.e("Root Error, cmd: " + cmd, "error: " + output.error);
             }
-            return reader;
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         }
-        return null;
-    }
-
-    public static BufferedReader runCommandError(String cmd) {
-        if (!isRootAvailable()) return null;
-        BufferedReader reader;
-        try {
-            Process process = Runtime.getRuntime().exec("su");
-            DataOutputStream os = new DataOutputStream(
-                    process.getOutputStream());
-            os.writeBytes(cmd + "\n");
-            os.writeBytes("exit\n");
-            reader = new BufferedReader(new InputStreamReader(
-                    process.getErrorStream()));
-            os.flush();
-            return reader;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return output;
     }
 
     public static boolean copyFile(String old, String newDir) {
@@ -119,14 +98,8 @@ public class RootUtils {
 
     public static boolean remountSystem(String mountType) {
         if (!isRootAvailable()) return false;
-        BufferedReader reader = runCommand("mount -o remount," + mountType + " /system \n");
-        try {
-            if (reader != null) reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
+        CommandOutput output = runCommand("mount -o remount," + mountType + " /system \n");
+        return output != null && output.exitCode == 0 && TextUtils.isEmpty(output.error);
     }
 
     public static boolean deleteFile(String path) {
@@ -164,43 +137,14 @@ public class RootUtils {
         return true;
     }
 
-    /*public static boolean exists(File file) {
-        try {
-            BufferedReader reader = runCommandError("test -d " + file.getPath());
-            return reader != null && reader.read() == 0;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }*/
-
     public static boolean isRootAvailable() {
-        return findBinary("su");
-    }
-
-
-
-    public static boolean findBinary(String binaryName) {
-        boolean found = false;
-        String[] places = {"/sbin/", "/system/bin/", "/system/xbin/", "/data/local/xbin/",
-                "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/"};
-        for (String where : places) {
-            if ( new File( where + binaryName ).exists() ) {
-                found = true;
-                break;
-            }
+        CommandOutput output = runCommand("id");
+        if (output != null && TextUtils.isEmpty(output.error) && output.exitCode == 0) {
+            return output.output.contains("uid=0");
+        } else {
+            output = runCommand("echo _TEST_");
+            return output != null && output.output.contains("_TEST_");
         }
-        return found;
-    }
-
-    public static boolean isSuEnabled() {
-        int value = 0;
-        try {
-            value = Integer.valueOf(Utils.getProperty("persist.sys.root_access"));
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-        return (value == 1 || value == 3);
     }
 
     public static void writeFile(File file, String content) {
@@ -216,19 +160,8 @@ public class RootUtils {
     }
 
     public static String readFile(File file) {
-        String r = "";
-        try {
-            BufferedReader br = runCommand("cat " + file.getAbsolutePath() + "\n");
-            if (br == null) return null;
-            String line;
-            while ((line = br.readLine()) != null) {
-                r += line;
-                r += "\n";
-            }
-        } catch (IOException e) {
-            // ignore
-        }
-        return r;
+        CommandOutput out = runCommand("cat " + file.getAbsolutePath());
+        return out != null ? out.output : null;
     }
 
     public static void renameFile(File oldFile, File newFile) {

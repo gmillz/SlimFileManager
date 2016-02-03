@@ -195,7 +195,7 @@ public class DriveFiles extends HashMap<File, ArrayList<File>> {
     }
 
     public static String getRootId() {
-        return INSTANCE.mRootFile.getId();
+        return INSTANCE.mRootFile == null ? null : INSTANCE.mRootFile.getId();
     }
 
     public static void insertFile(File file) {

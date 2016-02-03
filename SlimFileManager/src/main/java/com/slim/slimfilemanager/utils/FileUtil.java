@@ -8,12 +8,11 @@ import com.slim.slimfilemanager.settings.SettingsProvider;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class FileUtil {
 
@@ -68,26 +67,19 @@ public class FileUtil {
     }
 
     public static String[] getFileProperties(Context context, File file) {
-        BufferedReader in;
         String[] info = null;
-        String line;
 
-        try {
-            if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)) {
-                in = RootUtils.runCommand("ls -l " + file.getAbsolutePath());
+        RootUtils.CommandOutput out;
+            if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)
+                    && RootUtils.isRootAvailable()) {
+                out = RootUtils.runCommand("ls -l " + file.getAbsolutePath());
             } else {
-                in = runCommand("ls -l " + file.getAbsolutePath());
+                out = runCommand("ls -l " + file.getAbsolutePath());
             }
-            if (in == null) return null;
-
-            while ((line = in.readLine()) != null) {
-                info = getAttrs(line);
-            }
-            in.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (out == null) return null;
+        if (TextUtils.isEmpty(out.error) && out.exitCode == 0) {
+            info = getAttrs(out.output);
         }
-
         return info;
     }
 
@@ -126,29 +118,27 @@ public class FileUtil {
         return results;
     }
 
-    public static BufferedReader runCommand(String cmd) {
-        BufferedReader reader;
+    public static RootUtils.CommandOutput runCommand(String cmd) {
+        RootUtils.CommandOutput output = new RootUtils.CommandOutput();
         try {
             Process process = Runtime.getRuntime().exec("sh");
             DataOutputStream os = new DataOutputStream(
                     process.getOutputStream());
             os.writeBytes(cmd + "\n");
             os.writeBytes("exit\n");
-            reader = new BufferedReader(new InputStreamReader(
-                    process.getInputStream()));
-            String err = (new BufferedReader(new InputStreamReader(
-                    process.getErrorStream()))).readLine();
             os.flush();
 
-            if (process.waitFor() != 0 || (!"".equals(err) && null != err)) {
-                Log.e("Root Error, cmd: " + cmd, err);
-                return null;
+            output.exitCode = process.waitFor();
+            output.output = IOUtils.toString(process.getInputStream());
+            output.error = IOUtils.toString(process.getErrorStream());
+
+            if (output.exitCode != 0 || (!TextUtils.isEmpty(output.error))) {
+                Log.e("Root Error, cmd: " + cmd, "error: " + output.error);
             }
-            return reader;
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         }
-        return null;
+        return output;
     }
 
     public static boolean changeGroupOwner(Context context, File file, String owner, String group) {
