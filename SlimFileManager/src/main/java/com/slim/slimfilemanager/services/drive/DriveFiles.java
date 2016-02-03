@@ -202,4 +202,9 @@ public class DriveFiles extends HashMap<File, ArrayList<File>> {
         String parentId = file.getParents().get(0).getId();
         INSTANCE.get(INSTANCE.mIndex.get(parentId)).add(file);
     }
+
+    public static void removeFile(File file) {
+        String parentId = file.getParents().get(0).getId();
+        INSTANCE.get(INSTANCE.mIndex.get(parentId)).remove(file);
+    }
 }

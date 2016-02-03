@@ -307,6 +307,7 @@ public class DriveFragment extends BaseBrowserFragment {
             }
             protected Void doInBackground(Void... v) {
                 DriveUtils.deleteFile(mDrive, path);
+                DriveFiles.removeFile(DriveFiles.get(path));
                 return null;
             }
             protected void onPostExecute(Void v) {
