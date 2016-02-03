@@ -24,8 +24,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 
 import com.slim.slimfilemanager.R;
@@ -63,7 +63,7 @@ public class SaveFileDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         View view = new DialogHelper.Builder(getActivity())
-                .setIcon(getResources().getDrawable(R.drawable.ic_action_save))
+                .setIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_action_save))
                 .setTitle(R.string.salva)
                 .setMessage(String.format(getString(R.string.save_changes), mFile.getName()))
                 .createCommonView();

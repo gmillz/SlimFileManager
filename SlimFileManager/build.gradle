@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.jakewharton.hugo'
 
 android {
     compileSdkVersion 23
@@ -22,6 +23,9 @@ android {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
     }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
 }
 
 repositories {
@@ -43,6 +47,8 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
     }
 
+    compile 'com.jakewharton:butterknife:7.0.1'
+    compile 'com.appeaser.sublimenavigationviewlibrary:sublimenavigationviewlibrary:0.0.1'
     compile 'org.androidannotations:androidannotations-api:3.3.2'
     compile 'com.jcraft:jsch:0.1.52'
     compile 'org.apache.commons:commons-compress:1.6'

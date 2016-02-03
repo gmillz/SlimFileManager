@@ -13,7 +13,11 @@ import com.slim.slimfilemanager.R;
 
 import java.io.File;
 
-public class PermissionsDialog implements CompoundButton.OnCheckedChangeListener {
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
+
+public class PermissionsDialog {
 
     AlertDialog.Builder mBuilder;
 
@@ -22,10 +26,17 @@ public class PermissionsDialog implements CompoundButton.OnCheckedChangeListener
 
     private View mView;
 
-    EditText mOwner, mGroup;
-    CheckBox uRead, uWrite, uExecute;
-    CheckBox gRead, gWrite, gExecute;
-    CheckBox oRead, oWrite, oExecute;
+    @Bind(R.id.owner) EditText mOwner;
+    @Bind(R.id.group) EditText mGroup;
+    @Bind(R.id.uread) CheckBox uRead;
+    @Bind(R.id.uwrite) CheckBox uWrite;
+    @Bind(R.id.uexecute) CheckBox uExecute;
+    @Bind(R.id.gread) CheckBox gRead;
+    @Bind(R.id.gwrite) CheckBox gWrite;
+    @Bind(R.id.gexecute) CheckBox gExecute;
+    @Bind(R.id.oread) CheckBox oRead;
+    @Bind(R.id.owrite) CheckBox oWrite;
+    @Bind(R.id.oexecute) CheckBox oExecute;
 
     private File mFile;
     private Context mContext;
@@ -42,7 +53,10 @@ public class PermissionsDialog implements CompoundButton.OnCheckedChangeListener
         init();
     }
 
-    @Override
+    @OnCheckedChanged({R.id.uread, R.id.uwrite, R.id.uexecute,
+            R.id.gread, R.id.gwrite, R.id.gexecute,
+            R.id.oread, R.id.owrite, R.id.oexecute})
+    @SuppressWarnings("unused")
     public void onCheckedChanged(CompoundButton view, boolean isChecked) {
         if (view == uRead) {
             mPermissions.userRead = isChecked;
@@ -88,31 +102,7 @@ public class PermissionsDialog implements CompoundButton.OnCheckedChangeListener
 
     private void initViews() {
         mView = View.inflate(mContext, R.layout.permissions, null);
-
-        mOwner = (EditText) mView.findViewById(R.id.owner);
-        mGroup = (EditText) mView.findViewById(R.id.group);
-
-        uRead = (CheckBox) mView.findViewById(R.id.uread);
-        uWrite = (CheckBox) mView.findViewById(R.id.uwrite);
-        uExecute = (CheckBox) mView.findViewById(R.id.uexecute);
-
-        gRead = (CheckBox) mView.findViewById(R.id.gread);
-        gWrite = (CheckBox) mView.findViewById(R.id.gwrite);
-        gExecute = (CheckBox) mView.findViewById(R.id.gexecute);
-
-        oRead = (CheckBox) mView.findViewById(R.id.oread);
-        oWrite = (CheckBox) mView.findViewById(R.id.owrite);
-        oExecute = (CheckBox) mView.findViewById(R.id.oexecute);
-
-        uRead.setOnCheckedChangeListener(this);
-        uWrite.setOnCheckedChangeListener(this);
-        uExecute.setOnCheckedChangeListener(this);
-        gRead.setOnCheckedChangeListener(this);
-        gWrite.setOnCheckedChangeListener(this);
-        gExecute.setOnCheckedChangeListener(this);
-        oRead.setOnCheckedChangeListener(this);
-        oWrite.setOnCheckedChangeListener(this);
-        oExecute.setOnCheckedChangeListener(this);
+        ButterKnife.bind(this, mView);
     }
 
     private void initBuilder() {

@@ -1,8 +1,14 @@
 package com.slim.slimfilemanager.utils.file;
 
+import android.os.AsyncTask;
+
 import com.google.api.services.drive.Drive;
+import com.slim.slimfilemanager.services.drive.DriveFiles;
+import com.slim.slimfilemanager.services.drive.DriveUtils;
+import com.slim.slimfilemanager.utils.Utils;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class DriveFile extends BaseFile {
 
@@ -17,18 +23,20 @@ public class DriveFile extends BaseFile {
     }
 
     @Override
-    public boolean moveToFile(BaseFile newFile) {
-        return false;
-    }
-
-    @Override
-    public boolean copyToFile(BaseFile newFile) {
-        return false;
-    }
-
-    @Override
     public boolean delete() {
-        return false;
+        AsyncTask<Void, Void, Void> deleteTask = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                DriveUtils.deleteFile(mDrive, mFile.getId());
+                return null;
+            }
+        }.execute();
+        try {
+            deleteTask.get();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -48,12 +56,12 @@ public class DriveFile extends BaseFile {
 
     @Override
     public String getPath() {
-        return mFile.getId();
+        return DriveFiles.getPath(mFile);
     }
 
     @Override
     public String getRealPath() {
-        return getPath();
+        return  mFile.getId();
     }
 
     @Override
@@ -62,8 +70,22 @@ public class DriveFile extends BaseFile {
     }
 
     @Override
-    public File getFile() {
-        return null;
+    public void getFile(final GetFileCallback callback) {
+        new AsyncTask<Void, Void, File>() {
+            @Override
+            protected File doInBackground(Void... voids) {
+                File cacheFile = new File(Utils.getCacheDir() + mFile.getId()
+                        + "/" + mFile.getTitle());
+                DriveUtils.downloadFile(mDrive, mFile, cacheFile);
+                return cacheFile;
+            }
+
+            @Override
+            protected void onPostExecute(File file) {
+                super.onPostExecute(file);
+                callback.onGetFile(file);
+            }
+        }.execute();
     }
 
     @Override
@@ -73,7 +95,13 @@ public class DriveFile extends BaseFile {
 
     @Override
     public String[] list() {
-        return new String[0];
+        ArrayList<com.google.api.services.drive.model.File> files =
+                DriveFiles.getAll(mFile.getId());
+        String[] f = new String[files.size()];
+        for (com.google.api.services.drive.model.File fi : files) {
+            f[files.indexOf(fi)] = fi.getTitle();
+        }
+        return f;
     }
 
     @Override
@@ -86,7 +114,8 @@ public class DriveFile extends BaseFile {
         return mFile.getModifiedDate().getValue();
     }
 
-    public com.google.api.services.drive.model.File getDriveFile() {
+    @Override
+    public com.google.api.services.drive.model.File getRealFile() {
         return mFile;
     }
 }

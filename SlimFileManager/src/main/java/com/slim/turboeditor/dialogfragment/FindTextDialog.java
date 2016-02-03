@@ -41,11 +41,17 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 // ...
 public class FindTextDialog extends DialogFragment {
 
-    private EditText textToFind, textToReplace;
-    private CheckBox regexCheck, replaceCheck, matchCaseCheck;
+    @Bind(R.id.text_to_find) EditText textToFind;
+    @Bind(R.id.text_to_replace) EditText textToReplace;
+    @Bind(R.id.regex_check) CheckBox regexCheck;
+    @Bind(R.id.replace_check) CheckBox replaceCheck;
+    @Bind(R.id.match_case_check) CheckBox matchCaseCheck;
 
     public static FindTextDialog newInstance(String allText) {
         final FindTextDialog f = new FindTextDialog();
@@ -65,11 +71,7 @@ public class FindTextDialog extends DialogFragment {
                 .setView(R.layout.dialog_fragment_find_text)
                 .createSkeletonView();
 
-        this.textToFind = (EditText) view.findViewById(R.id.text_to_find);
-        this.textToReplace = (EditText) view.findViewById(R.id.text_to_replace);
-        this.regexCheck = (CheckBox) view.findViewById(R.id.regex_check);
-        this.replaceCheck = (CheckBox) view.findViewById(R.id.replace_check);
-        this.matchCaseCheck = (CheckBox) view.findViewById(R.id.match_case_check);
+        ButterKnife.bind(this, view);
 
         replaceCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

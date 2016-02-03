@@ -1,5 +1,7 @@
 package com.slim.slimfilemanager.utils;
 
+import static butterknife.ButterKnife.findById;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.view.View;
@@ -12,7 +14,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class PasteTask implements View.OnClickListener {
+import butterknife.OnClick;
+
+public class PasteTask {
 
     Context mContext;
     ArrayList<BaseFile> mFiles = new ArrayList<>();
@@ -22,15 +26,15 @@ public class PasteTask implements View.OnClickListener {
     private Callback mCallback;
 
     public interface Callback {
-        void pasteFiles(ArrayList<String> paths, boolean move);
+        void pasteFiles(ArrayList<BaseFile> paths, boolean move);
     }
 
-    String mCurrent;
+    BaseFile mCurrent;
 
     AlertDialog mDialog;
 
-    HashMap<String, String> mExistingFiles = new HashMap<>();
-    ArrayList<String> mProcess = new ArrayList<>();
+    HashMap<File, BaseFile> mExistingFiles = new HashMap<>();
+    ArrayList<BaseFile> mProcess = new ArrayList<>();
 
     public PasteTask(Context context,
                      boolean shouldDelete, String location, Callback callback) {
@@ -46,9 +50,9 @@ public class PasteTask implements View.OnClickListener {
             if (file.exists()) {
                 File newFile = new File(mLocation + File.separator + file.getName());
                 if (newFile.exists()) {
-                    mExistingFiles.put(newFile.getPath(), file.getRealPath());
+                    mExistingFiles.put(newFile, file);
                 } else {
-                    mProcess.add(file.getRealPath());
+                    mProcess.add(file);
                 }
             }
         }
@@ -62,19 +66,14 @@ public class PasteTask implements View.OnClickListener {
                 mCallback.pasteFiles(mProcess, mMove);
             }
         } else {
-            String key = mExistingFiles.keySet().iterator().next();
+            File key = mExistingFiles.keySet().iterator().next();
             mCurrent = mExistingFiles.get(key);
             mExistingFiles.remove(key);
             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
             View view = View.inflate(mContext, R.layout.file_exists_dialog, null);
-            view.findViewById(R.id.skip).setOnClickListener(this);
-            view.findViewById(R.id.skip_all).setOnClickListener(this);
-            view.findViewById(R.id.replace).setOnClickListener(this);
-            view.findViewById(R.id.replace_all).setOnClickListener(this);
-            view.findViewById(R.id.cancel).setOnClickListener(this);
 
-            ((TextView) view.findViewById(R.id.source)).setText(mCurrent);
-            ((TextView) view.findViewById(R.id.destination)).setText(key);
+            ((TextView) findById(view, R.id.source)).setText(mCurrent.getPath());
+            ((TextView) findById(view, R.id.destination)).setText(key.getPath());
 
             builder.setView(view);
             mDialog = builder.create();
@@ -82,7 +81,7 @@ public class PasteTask implements View.OnClickListener {
         }
     }
 
-    @Override
+    @OnClick({ R.id.skip, R.id.skip_all, R.id.replace, R.id.replace_all, R.id.cancel})
     public void onClick(View view) {
         if (mDialog != null) mDialog.dismiss();
 
@@ -92,8 +91,8 @@ public class PasteTask implements View.OnClickListener {
             mProcess.add(mCurrent);
         } else if (view.getId() == R.id.replace_all) {
             mProcess.add(mCurrent);
-            for (String file : mExistingFiles.keySet()) {
-                mProcess.add(mExistingFiles.get(file));
+            for (File f : mExistingFiles.keySet()) {
+                mProcess.add(mExistingFiles.get(f));
             }
             mExistingFiles.clear();
         } else if (view.getId() == R.id.cancel) {

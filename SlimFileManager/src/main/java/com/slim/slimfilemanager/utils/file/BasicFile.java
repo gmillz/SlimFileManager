@@ -18,16 +18,6 @@ public class BasicFile extends BaseFile {
     }
 
     @Override
-    public boolean moveToFile(BaseFile newFile) {
-        return FileUtil.copyFile(mContext, mFile.getAbsolutePath(), newFile.getParent());
-    }
-
-    @Override
-    public boolean copyToFile(BaseFile newFile) {
-        return FileUtil.copyFile(mContext, mFile.getAbsolutePath(), newFile.getParent());
-    }
-
-    @Override
     public boolean delete() {
         return FileUtil.deleteFile(mContext, mFile.getAbsolutePath());
     }
@@ -53,8 +43,8 @@ public class BasicFile extends BaseFile {
     }
 
     @Override
-    public File getFile() {
-        return mFile;
+    public void getFile(GetFileCallback callback) {
+        callback.onGetFile(mFile);
     }
 
     @Override
@@ -85,5 +75,10 @@ public class BasicFile extends BaseFile {
     @Override
     public long lastModified() {
         return mFile.lastModified();
+    }
+
+    @Override
+    public File getRealFile() {
+        return mFile;
     }
 }

@@ -19,6 +19,8 @@
 
 package com.slim.turboeditor.activity;
 
+import static butterknife.ButterKnife.findById;
+
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -71,6 +73,9 @@ import java.lang.ref.WeakReference;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 public class MainActivity extends ThemeActivity implements FindTextDialog
         .SearchDialogInterface, GoodScrollView.ScrollInterface, PageSystem.PageSystemInterface,
         PageSystemButtons.PageButtonsInterface, NumberPickerDialog.INumberPickerDialog,
@@ -95,9 +100,9 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
 
     private ProgressDialog mProgressDialog;
 
-    private HorizontalScrollView mHorizontalScroll;
-    private GoodScrollView verticalScroll;
-    private Editor mEditor;
+    @Bind(R.id.horizontal_scroll) HorizontalScrollView mHorizontalScroll;
+    @Bind(R.id.vertical_scroll) GoodScrollView verticalScroll;
+    @Bind(R.id.editor) Editor mEditor;
     private final Runnable colorRunnable_duringEditing =
             new Runnable() {
                 @Override
@@ -121,6 +126,8 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_home);
+
+        ButterKnife.bind(this);
 
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage(getString(R.string.please_wait));
@@ -204,7 +211,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
             return false;
         } else {
             if (mEditor == null)
-                mEditor = (Editor) findViewById(R.id.editor);
+                mEditor = findById(this, R.id.editor);
 
             // this will happen on first key pressed on hard-keyboard only. Once myInputField
             // gets the focus again, it will automatically receive further key presses.
@@ -478,12 +485,6 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
 
     private void setupTextEditor() {
 
-        verticalScroll = (GoodScrollView) findViewById(R.id.vertical_scroll);
-        mEditor = (Editor) findViewById(R.id.editor);
-
-        mHorizontalScroll =
-                (HorizontalScrollView) findViewById(R.id.horizontal_scroll);
-
         if (SettingsProvider.getBoolean(this, SettingsProvider.EDITOR_WRAP_CONTENT, false)) {
             mHorizontalScroll.removeView(mEditor);
             verticalScroll.removeView(mHorizontalScroll);
@@ -495,8 +496,8 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         pageSystem = new PageSystem(this);
 
         pageSystemButtons = new PageSystemButtons(this, this,
-                (FloatingActionButton) findViewById(R.id.fabPrev),
-                (FloatingActionButton) findViewById(R.id.fabNext));
+                (FloatingActionButton) findById(this, R.id.fabPrev),
+                (FloatingActionButton) findById(this, R.id.fabNext));
 
         mEditor.setupEditor(this, verticalScroll);
     }
@@ -505,7 +506,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
 
         fileOpened = true;
 
-        findViewById(R.id.text_editor).setVisibility(View.VISIBLE);
+        findById(this, R.id.text_editor).setVisibility(View.VISIBLE);
 
         mEditor.resetVariables();
         searchResult = null;
@@ -522,7 +523,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         fileOpened = false;
 
         try {
-            findViewById(R.id.text_editor).setVisibility(View.GONE);
+            findById(this, R.id.text_editor).setVisibility(View.GONE);
 
             mEditor.disableTextChangedListener();
             mEditor.replaceTextKeepCursor("");

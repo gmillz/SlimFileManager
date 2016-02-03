@@ -16,8 +16,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.app.ActivityCompat;
@@ -32,13 +32,14 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.HeaderViewListAdapter;
-import android.widget.ListView;
 
+import com.appeaser.sublimenavigationviewlibrary.OnNavigationMenuEventListener;
+import com.appeaser.sublimenavigationviewlibrary.SublimeBaseMenuItem;
+import com.appeaser.sublimenavigationviewlibrary.SublimeGroup;
+import com.appeaser.sublimenavigationviewlibrary.SublimeMenu;
+import com.appeaser.sublimenavigationviewlibrary.SublimeNavigationView;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.slim.slimfilemanager.fragment.BaseBrowserFragment;
@@ -53,30 +54,35 @@ import com.slim.slimfilemanager.widget.PageIndicator;
 import com.slim.slimfilemanager.widget.TabItem;
 import com.slim.slimfilemanager.widget.TabPageIndicator;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 public class FileManager extends ThemeActivity implements View.OnClickListener,
-        NavigationView.OnNavigationItemSelectedListener {
+        OnNavigationMenuEventListener {
 
     private static final int DRAWER_ROOT      = R.id.nav_root;
     private static final int DRAWER_SDCARD    = R.id.nav_sdcard;
     private static final int DRAWER_DOWNLOADS = R.id.nav_downloads;
     private static final int DRAWER_DCIM      = R.id.nav_dcim;
-    private static final int DRAWER_DROPBOX   = 105;
-    private static final int DRAWER_DRIVE     = 106;
+
+    private SublimeBaseMenuItem mDropboxItem;
+    private SublimeBaseMenuItem mDriveItem;
+    private SublimeBaseMenuItem mAddCloudOption;
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private BaseBrowserFragment mFragment;
 
-    private View mView;
-    private Toolbar mToolbar;
-    private ViewPager mViewPager;
-    private PageIndicator mPageIndicator;
-    private TabPageIndicator mTabs;
-    private DrawerLayout mDrawerLayout;
+    @Bind(R.id.base) View mView;
+    @Bind(R.id.toolbar) Toolbar mToolbar;
+    @Bind(R.id.pager) ViewPager mViewPager;
+    @Bind(R.id.indicator) PageIndicator mPageIndicator;
+    @Bind(R.id.tab_indicator) TabPageIndicator mTabs;
+    @Bind(R.id.drawer_layout) DrawerLayout mDrawerLayout;
+    @Bind(R.id.nav_view) SublimeNavigationView mNavView;
+    @Bind(R.id.paste) FloatingActionButton mPasteButton;
+    @Bind(R.id.float_button) FloatingActionsMenu mActionMenu;
     private ActionBarDrawerToggle mDrawerToggle;
-    private NavigationView mNavView;
-    private FloatingActionButton mPasteButton;
-    private FloatingActionsMenu mActionMenu;
 
     int mCurrentPosition;
     boolean mMove;
@@ -98,7 +104,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         Intent intent = getIntent();
 
         setContentView(R.layout.file_manager);
-        setupViews();
+        ButterKnife.bind(this);
         setupToolbar();
 
         checkPermissions();
@@ -189,42 +195,50 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        String path = null;
-        if (id == DRAWER_ROOT) {
-            path = "/";
-        } else if (id == DRAWER_SDCARD) {
-            path = Environment.getExternalStorageDirectory().getAbsolutePath();
-        } else if (id == DRAWER_DOWNLOADS) {
-            path = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-        } else if (id == DRAWER_DCIM) {
-            path = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DCIM).getAbsolutePath();
-        } else if (id == DRAWER_DROPBOX) {
-            if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DROPBOX)) {
-                mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DROPBOX);
-            } else {
-                mSectionsPagerAdapter.addTabId(TabItem.TAB_DROPBOX);
+    public boolean onNavigationMenuEvent(Event event, SublimeBaseMenuItem item) {
+        if (event.equals(Event.CLICKED)) {
+            int id = item.getItemId();
+            String path = null;
+            switch (id) {
+                case DRAWER_ROOT:
+                    path = "/";
+                    break;
+                case DRAWER_SDCARD:
+                    path = Environment.getExternalStorageDirectory().getAbsolutePath();
+                    break;
+                case DRAWER_DOWNLOADS:
+                    path = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+                    break;
+                case DRAWER_DCIM:
+                    path = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DCIM).getAbsolutePath();
+                    break;
             }
-        } else if (id == DRAWER_DRIVE) {
-            if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DRIVE)) {
-                mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DRIVE);
-            } else {
-                mSectionsPagerAdapter.addTabId(TabItem.TAB_DRIVE);
-            }
-        }
 
-        if (!TextUtils.isEmpty(path)) {
-            if (mSectionsPagerAdapter.getCount() == 0) {
-                mSectionsPagerAdapter.addTab(path);
-            } else {
-                mFragment.filesChanged(path);
+            if (!TextUtils.isEmpty(path)) {
+                if (mSectionsPagerAdapter.getCount() == 0) {
+                    mSectionsPagerAdapter.addTab(path);
+                } else {
+                    mFragment.filesChanged(path);
+                }
+                return true;
             }
+            if (item.equals(mDropboxItem)) {
+                if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DROPBOX)) {
+                    mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DROPBOX);
+                } else {
+                    mSectionsPagerAdapter.addTabId(TabItem.TAB_DROPBOX);
+                }
+            } else if (item.equals(mDriveItem)) {
+                if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DRIVE)) {
+                    mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DRIVE);
+                } else {
+                    mSectionsPagerAdapter.addTabId(TabItem.TAB_DRIVE);
+                }
+            }
+            mDrawerLayout.closeDrawer(GravityCompat.START);
         }
-        item.setChecked(true);
-        mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
@@ -244,18 +258,6 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         setCurrentlyDisplayedFragment(fragment);
         fragment.setPicking();
         fragment.setMimeType(type);
-    }
-
-    private void setupViews() {
-        mView = findViewById(R.id.base);
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        mNavView = (NavigationView) findViewById(R.id.nav_view);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mPageIndicator = (PageIndicator) findViewById(R.id.indicator);
-        mTabs = (TabPageIndicator) findViewById(R.id.tab_indicator);
-        mActionMenu = (FloatingActionsMenu) findViewById(R.id.float_button);
-        mPasteButton = (FloatingActionButton) findViewById(R.id.paste);
     }
 
     private void hideViews() {
@@ -329,23 +331,22 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         });*/
 
         addNavDrawerItems();
-        mNavView.setNavigationItemSelectedListener(this);
+        //mNavView.setNavigationItemSelectedListener(this);
+
+        mNavView.setNavigationMenuEventListener(this);
     }
 
     private void addNavDrawerItems() {
-        final SubMenu cloudItems = mNavView.getMenu().addSubMenu("Cloud Storage");
-        cloudItems.add(0, DRAWER_DROPBOX, 0, "Dropbox").setCheckable(true);
-        cloudItems.add(0, DRAWER_DRIVE, 0, "Google Drive").setCheckable(true);
+        SublimeGroup group = mNavView.getMenu().addGroup(true, true, true, true,
+                SublimeGroup.CheckableBehavior.SINGLE);
+        mNavView.getMenu().addGroupHeaderItem(group.getGroupId(), "Cloud Storage", "", false);
+        mDropboxItem = mNavView.getMenu().addTextItem(group.getGroupId(), "Dropbox", "", true);
+        mDriveItem = mNavView.getMenu().addTextItem(group.getGroupId(), "Drive", "", true);
+        mAddCloudOption = mNavView.getMenu().addTextItem(
+                group.getGroupId(), "Add Cloud Storage", "", true);
+        mAddCloudOption.setIcon(R.drawable.add);
 
-        // redraw nav drawer
-        for (int i = 0; i < mNavView.getChildCount(); i++) {
-            final View child = mNavView.getChildAt(i);
-            if (child != null && child instanceof ListView) {
-                final ListView menuView = (ListView) child;
-                final HeaderViewListAdapter adapter = (HeaderViewListAdapter) menuView.getAdapter();
-                ((BaseAdapter) adapter.getWrappedAdapter()).notifyDataSetChanged();
-            }
-        }
+        mNavView.getMenu().finalizeUpdates();
     }
 
     private void setupTabs() {

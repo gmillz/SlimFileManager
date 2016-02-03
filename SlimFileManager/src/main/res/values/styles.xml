@@ -84,4 +84,8 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
     </style>
 
+    <style name="NavigationViewStyle" parent="SnvSublimeNavigationView">
+        <item name="android:background">?android:colorBackground</item>
+    </style>
+
 </resources>

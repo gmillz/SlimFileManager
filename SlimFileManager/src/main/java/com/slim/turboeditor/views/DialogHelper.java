@@ -19,8 +19,11 @@
 
 package com.slim.turboeditor.views;
 
+import static butterknife.ButterKnife.findById;
+
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
@@ -109,7 +112,7 @@ public class DialogHelper {
         }
 
         public Builder setIcon(int iconRes) {
-            return setIcon(iconRes == 0 ? null : mContext.getResources().getDrawable(iconRes));
+            return setIcon(iconRes == 0 ? null : ContextCompat.getDrawable(mContext, iconRes));
         }
 
         public Builder setTitle(int titleRes) {
@@ -153,8 +156,8 @@ public class DialogHelper {
 
             ViewGroup rootLayout = (ViewGroup) createSkeletonView();
             View bodyRootView = inflater.inflate(R.layout.dialog, rootLayout, false);
-            ViewGroup bodyLayout = (ViewGroup) bodyRootView.findViewById(R.id.content);
-            TextView messageView = (TextView) bodyLayout.findViewById(R.id.message);
+            ViewGroup bodyLayout = findById(bodyRootView, R.id.content);
+            TextView messageView = findById(bodyLayout, R.id.message);
 
             rootLayout.addView(bodyRootView);
 
@@ -178,8 +181,9 @@ public class DialogHelper {
             LayoutInflater inflater = (LayoutInflater) mContext
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-            ViewGroup rootLayout = (ViewGroup) inflater.inflate(R.layout.dialog_skeleton, null);
-            TextView titleView = (TextView) rootLayout.findViewById(R.id.title);
+            ViewGroup rootLayout =
+                    (ViewGroup) View.inflate(mContext, R.layout.dialog_skeleton, null);
+            TextView titleView = findById(rootLayout, R.id.title);
 
             // Setup title
             if (mTitleText != null) {

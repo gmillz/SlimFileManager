@@ -84,16 +84,24 @@ public class ArchiveUtils {
         File outFile = new File(zip);
         try {
             FileOutputStream dest = new FileOutputStream(outFile);
-            ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(
+            final ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(
                     dest));
 
             for (BaseFile bf : files) {
-                File file = bf.getFile();
-                if (file.isDirectory()) {
-                    zipFolder(out, file, file.getParent().length());
-                } else {
-                    zipFile(out, file);
-                }
+                bf.getFile(new BaseFile.GetFileCallback() {
+                    @Override
+                    public void onGetFile(File file) {
+                        try {
+                            if (file.isDirectory()) {
+                                zipFolder(out, file, file.getParent().length());
+                            } else {
+                                zipFile(out, file);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             }
 
             out.close();
@@ -222,11 +230,19 @@ public class ArchiveUtils {
 
         try {
             OutputStream os = new FileOutputStream(tarFile);
-            ArchiveOutputStream aos = new ArchiveStreamFactory()
+            final ArchiveOutputStream aos = new ArchiveStreamFactory()
                     .createArchiveOutputStream(ArchiveStreamFactory.TAR, os);
             for (BaseFile bf : files) {
-                File input = bf.getFile();
-                addFilesToCompression(aos, input, ".");
+                bf.getFile(new BaseFile.GetFileCallback() {
+                    @Override
+                    public void onGetFile(File file) {
+                        try {
+                            addFilesToCompression(aos, file, ".");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             }
             aos.finish();
         } catch (IOException|ArchiveException e) {
@@ -247,12 +263,21 @@ public class ArchiveUtils {
         try {
             FileOutputStream fos = new FileOutputStream(outFile);
 
-            TarArchiveOutputStream taos = new TarArchiveOutputStream(
+            final TarArchiveOutputStream taos = new TarArchiveOutputStream(
                     new GZIPOutputStream(new BufferedOutputStream(fos)));
             taos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_STAR);
             taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
             for (BaseFile bf : files) {
-                addFilesToCompression(taos, bf.getFile(), ".");
+                bf.getFile(new BaseFile.GetFileCallback() {
+                    @Override
+                    public void onGetFile(File file) {
+                        try {
+                            addFilesToCompression(taos, file, ".");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             }
             taos.close();
         } catch (IOException e) {

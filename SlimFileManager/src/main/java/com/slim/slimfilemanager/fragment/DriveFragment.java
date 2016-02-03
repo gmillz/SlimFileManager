@@ -11,7 +11,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -25,9 +24,11 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
 import com.slim.slimfilemanager.FileManager;
+import com.slim.slimfilemanager.R;
+import com.slim.slimfilemanager.services.drive.DriveFiles;
+import com.slim.slimfilemanager.services.drive.DriveUtils;
 import com.slim.slimfilemanager.services.drive.IconCache;
 import com.slim.slimfilemanager.services.drive.ListFiles;
 import com.slim.slimfilemanager.utils.PasteTask;
@@ -35,10 +36,8 @@ import com.slim.slimfilemanager.utils.file.BaseFile;
 import com.slim.slimfilemanager.utils.file.DriveFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class DriveFragment extends BaseBrowserFragment {
 
@@ -53,18 +52,17 @@ public class DriveFragment extends BaseBrowserFragment {
 
     private static final String PREF_ACCOUNT_NAME = "accountName";
 
-    private static final String[] SCOPES = { DriveScopes.DRIVE };
+    private static final String[] SCOPES = {
+            DriveScopes.DRIVE
+    };
 
     public static final String ROOT_FOLDER = "My Drive";
-    public String mRootFolderId;
 
 
     private ListFiles.Callback mCallback = new ListFiles.Callback() {
         @Override
         public void filesList(ArrayList<com.google.api.services.drive.model.File> files) {
-            if (files == null || files.isEmpty()) return;
-
-            mAdapter.notifyDataSetChanged();
+            if (files == null) return;
 
             for (com.google.api.services.drive.model.File file : files) {
                 DriveFile df = new DriveFile(mDrive, file);
@@ -145,37 +143,69 @@ public class DriveFragment extends BaseBrowserFragment {
                 .setApplicationName(mActivity.getApplication().getPackageName())
                 .build();
 
-        if (isGooglePlayServicesAvailable()) {
-            filesChanged(ROOT_FOLDER);
+        if (!DriveFiles.isPopulated()) {
+            DriveFiles.populate(mDrive, mExecutor);
         }
 
-        setRootFolderId();
+        if (isGooglePlayServicesAvailable()) {
+            onClickFile(ROOT_FOLDER);
+        }
     }
 
     @Override
     public void onClickFile(final String path) {
-        if (TextUtils.isEmpty(path)) return;
+        //if (TextUtils.isEmpty(path)) return;
         Log.d("TEST", "onClickFile(" + path + ")");
-        mExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (path.equals(getRootFolder())) {
-                        filesChanged(path);
-                        return;
-                    }
-                    com.google.api.services.drive.model.File file =
-                            mDrive.files().get(path).execute();
-                    if (file.getMimeType().equals(DriveFile.FOLDER_TYPE)) {
-                        filesChanged(path);
-                    } else {
-                        Log.d("TEST", "name=" + file.getTitle());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        Log.d("TEST", "rootFolder=" + getRootFolder());
+        if (path.equals(getRootFolder())) {
+            Log.d("TEST", "path equals " + getRootFolder());
+            filesChanged(path);
+            setPathText(path);
+            return;
+        }
+        final com.google.api.services.drive.model.File file = DriveFiles.get(path);
+        if (file == null || file.getMimeType() == null) {
+            Log.d("TEST", "file is null");
+            return;
+        }
+        if (file.getMimeType().equals(DriveFile.FOLDER_TYPE)) {
+            mCurrentPath = path;
+            filesChanged(path);
+            if (path.equals(getRootFolder()) || file.getParents().isEmpty()) {
+                setPathText(getRootFolder());
+            } else {
+                updatePathText(file);
             }
-        });
+        } else {
+            Log.d("TEST", "name=" + file.getTitle());
+            showProgressDialog(R.string.downloading, true);
+            mExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    File cacheFile = DriveUtils.downloadFileToCache(mDrive, file);
+                    hideProgressDialog();
+                    fileClicked(cacheFile);
+                }
+            });
+        }
+    }
+
+    private void updatePathText(final com.google.api.services.drive.model.File file) {
+        new AsyncTask<Void, Void, String>() {
+            protected String doInBackground(Void... v) {
+                DriveFile f = new DriveFile(mDrive, file);
+                return getRootFolder() + f.getPath();
+            }
+            protected void onPostExecute(String path) {
+                setPathText(path);
+            }
+        }.executeOnExecutor(mExecutor);
+    }
+
+    @Override
+    public void refreshFiles() {
+        DriveFiles.populate(mDrive, mExecutor);
+        filesChanged(mCurrentPath);
     }
 
     @Override
@@ -187,8 +217,10 @@ public class DriveFragment extends BaseBrowserFragment {
             chooseAccount();
         } else {
             if (isDeviceOnline()) {
+                Log.d("TEST", "here");
                 showProgress();
                 if (!mFiles.isEmpty()) mFiles.clear();
+                mAdapter.notifyDataSetChanged();
                 ListFiles listFiles = new ListFiles(mDrive, path, mCallback);
                 listFiles.execute();
             } else {
@@ -213,19 +245,74 @@ public class DriveFragment extends BaseBrowserFragment {
     public PasteTask.Callback getPasteCallback() {
         return new PasteTask.Callback() {
             @Override
-            public void pasteFiles(ArrayList<String> paths, boolean move) {
+            public void pasteFiles(final ArrayList<BaseFile> paths, final boolean move) {
+                new AsyncTask<Void, Integer, Boolean>() {
+                    @Override
+                    protected void onPreExecute() {
+                        showProgressDialog(move ? R.string.move : R.string.copy, false);
+                    }
 
+                    @Override
+                    protected Boolean doInBackground(Void... v) {
+                        for (final BaseFile f : paths) {
+                            f.getFile(new BaseFile.GetFileCallback() {
+                                @Override
+                                public void onGetFile(File file) {
+                                    if (file.exists()) {
+                                        com.google.api.services.drive.model.File dFile =
+                                                DriveUtils.uploadFile(mDrive, file, getCurrentPath());
+                                        DriveFiles.insertFile(dFile);
+                                        publishProgress(paths.indexOf(f));
+                                    }
+                                }
+                            });
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Boolean b) {
+                        hideProgressDialog();
+                        filesChanged(mCurrentPath);
+                    }
+
+                    @Override
+                    protected void onProgressUpdate(Integer... progress) {
+                        updateProgress(progress[0]);
+                    }
+                }.executeOnExecutor(mExecutor);
             }
         };
     }
 
     @Override
-    public BaseFile getFile(int i) {
-        return null;
+    public String getCurrentPath() {
+        if (mCurrentPath.equals(getRootFolder())) {
+            return DriveFiles.getRootId();
+        } else {
+            return mCurrentPath;
+        }
     }
 
     @Override
-    public void onDeleteFile(String path) {
+    public BaseFile getFile(final int i) {
+        return mFiles.get(i);
+    }
+
+    @Override
+    public void onDeleteFile(final String path) {
+        new AsyncTask<Void, Void, Void>() {
+            protected void onPreExecute() {
+                showProgressDialog(R.string.delete_dialog_title, true);
+            }
+            protected Void doInBackground(Void... v) {
+                DriveUtils.deleteFile(mDrive, path);
+                return null;
+            }
+            protected void onPostExecute(Void v) {
+                hideProgressDialog();
+            }
+        }.executeOnExecutor(mExecutor);
     }
 
     @Override
@@ -235,53 +322,18 @@ public class DriveFragment extends BaseBrowserFragment {
 
     @Override
     public void backPressed() {
-        mExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.d("TEST", "mCurrentPath=" + mCurrentPath);
-                    com.google.api.services.drive.model.File file =
-                            mDrive.files().get(mCurrentPath).execute();
-                    if (!file.getParents().isEmpty()) {
-                        ParentReference parent = file.getParents().get(0);
-                        if (parent != null) {
-                            filesChanged(parent.getId());
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        com.google.api.services.drive.model.File file = DriveFiles.get(mCurrentPath);
+        if (file != null && !file.getParents().isEmpty()) {
+            ParentReference parent = file.getParents().get(0);
+            if (parent != null) {
+                onClickFile(parent.getId());
             }
-        });
+        }
     }
 
     @Override
     public String getRootFolder() {
-        return mRootFolderId;
-    }
-
-    private void setRootFolderId() {
-        new AsyncTask<Void, Void, Void>() {
-            protected Void doInBackground(Void... v) {
-                try {
-                    FileList result = mDrive.files().list().setMaxResults(10000).execute();
-                    if (!result.isEmpty()) {
-                        for (com.google.api.services.drive.model.File file : result.getItems()) {
-                            List<ParentReference> parents = file.getParents();
-                            for (ParentReference parent : parents) {
-                                if (parent.getIsRoot()) {
-                                    mRootFolderId = parent.getId();
-                                    return null;
-                                }
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-        }.executeOnExecutor(mExecutor);
+        return ROOT_FOLDER;
     }
 
     @Override
@@ -292,6 +344,7 @@ public class DriveFragment extends BaseBrowserFragment {
     @Override
     public void getIconForFile(ImageView imageView, int position) {
         IconCache.getIconForFile(mContext, mDrive,
-                ((DriveFile) mFiles.get(position)).getDriveFile(), imageView);
+                ((com.google.api.services.drive.model.File)
+                        mFiles.get(position).getRealFile()), imageView);
     }
 }

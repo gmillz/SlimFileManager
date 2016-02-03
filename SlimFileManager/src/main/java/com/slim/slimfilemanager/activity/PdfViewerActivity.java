@@ -2,7 +2,6 @@ package com.slim.slimfilemanager.activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -13,19 +12,21 @@ import com.slim.slimfilemanager.R;
 
 import java.io.File;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 public class PdfViewerActivity extends Activity {
 
-    private PDFView mPDFView;
+    @Bind(R.id.pdf_view) PDFView mPDFView;
 
-    private int mPageCount;
+    @SuppressWarnings("unused") private int mPageCount;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_pdf);
-
-        mPDFView = (PDFView) findViewById(R.id.pdf_view);
+        ButterKnife.bind(this);
 
         parseIntent(getIntent());
     }

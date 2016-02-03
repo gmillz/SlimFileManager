@@ -121,20 +121,27 @@ public class BrowserFragment extends BaseBrowserFragment {
     public PasteTask.Callback getPasteCallback() {
         return new PasteTask.Callback() {
             @Override
-            public void pasteFiles(ArrayList<String> paths, boolean move) {
-                boolean passed = true;
+            public void pasteFiles(ArrayList<BaseFile> paths, final boolean move) {
                 showProgressDialog(move ? R.string.move : R.string.copy, true);
-                for (String path : paths) {
-                    if (move) {
-                        passed = FileUtil.moveFile(mContext, path, mCurrentPath);
-                    } else {
-                        passed = FileUtil.copyFile(mContext, path, mCurrentPath);
-                    }
+                for (BaseFile f : paths) {
+                    f.getFile(new BaseFile.GetFileCallback() {
+                        @Override
+                        public void onGetFile(File file) {
+                            boolean passed;
+                            if (move) {
+                                passed = FileUtil.moveFile(
+                                        mContext, file.getAbsolutePath(), mCurrentPath);
+                            } else {
+                                passed = FileUtil.copyFile(
+                                        mContext, file.getAbsolutePath(), mCurrentPath);
+                            }
+                            if (!passed) {
+                                toast("Failed to paste file - " + file.getName());
+                            }
+                        }
+                    });
                 }
                 hideProgressDialog();
-                if (!passed) {
-                    toast("Failed to paste files.");
-                }
             }
         };
     }

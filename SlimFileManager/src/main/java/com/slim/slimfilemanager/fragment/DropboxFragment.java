@@ -224,7 +224,7 @@ public class DropboxFragment extends BaseBrowserFragment {
     public PasteTask.Callback getPasteCallback() {
         return new PasteTask.Callback() {
             @Override
-            public void pasteFiles(final ArrayList<String> paths, final boolean move) {
+            public void pasteFiles(final ArrayList<BaseFile> paths, final boolean move) {
                 new AsyncTask<Void, Long, Boolean>() {
                     @Override
                     protected void onPreExecute() {
@@ -233,36 +233,39 @@ public class DropboxFragment extends BaseBrowserFragment {
 
                     @Override
                     protected Boolean doInBackground(Void... v) {
-                        try {
-                            for (String path : paths) {
-                                File file = new File(path);
-                                if (file.exists()) {
-                                    FileInputStream fis = new FileInputStream(file);
-                                    String dropboxPath =
-                                            mCurrentPath + File.separator + file.getName();
-                                    DropboxAPI.UploadRequest request =
-                                            mAPI.putFileOverwriteRequest(
-                                                    dropboxPath, fis, file.length(),
-                                                    new ProgressListener() {
-                                                        @Override
-                                                        public long progressInterval() {
-                                                            return 500;
-                                                        }
+                        for (BaseFile f : paths) {
+                            f.getFile(new BaseFile.GetFileCallback() {
+                                @Override
+                                public void onGetFile(File file) {
+                                    try {
+                                        if (file.exists()) {
+                                            FileInputStream fis = new FileInputStream(file);
+                                            String dropboxPath =
+                                                    mCurrentPath + File.separator + file.getName();
+                                            DropboxAPI.UploadRequest request =
+                                                    mAPI.putFileOverwriteRequest(
+                                                            dropboxPath, fis, file.length(),
+                                                            new ProgressListener() {
+                                                                @Override
+                                                                public long progressInterval() {
+                                                                    return 500;
+                                                                }
 
-                                                        @Override
-                                                        public void onProgress(
-                                                                long l, long l1) {
-                                                            publishProgress(l, l1);
-                                                        }
-                                                    });
-
-                                    if (request != null) {
-                                        request.upload();
+                                                                @Override
+                                                                public void onProgress(
+                                                                        long l, long l1) {
+                                                                    publishProgress(l, l1);
+                                                                }
+                                                            });
+                                             if (request != null) {
+                                                 request.upload();
+                                             }
+                                        }
+                                    } catch (IOException | DropboxException e) {
+                                        // ignore
                                     }
                                 }
-                            }
-                        } catch (IOException | DropboxException e) {
-                            return false;
+                            });
                         }
                         return true;
                     }
@@ -301,6 +304,6 @@ public class DropboxFragment extends BaseBrowserFragment {
     @Override
     public void getIconForFile(ImageView imageView, int position) {
         IconCache.getIconForFile(mContext,
-                mAPI, ((DropboxFile) mFiles.get(position)).getEntry(), imageView);
+                mAPI, ((DropboxAPI.Entry)mFiles.get(position).getRealFile()), imageView);
     }
 }

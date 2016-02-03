@@ -1,5 +1,7 @@
 package com.slim.slimfilemanager.fragment;
 
+import static butterknife.ButterKnife.findById;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -9,7 +11,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
@@ -54,6 +55,7 @@ import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.slimfilemanager.utils.SortUtils;
 import com.slim.slimfilemanager.utils.Utils;
 import com.slim.slimfilemanager.utils.file.BaseFile;
+import com.slim.slimfilemanager.utils.file.BasicFile;
 import com.slim.slimfilemanager.widget.DividerItemDecoration;
 
 import java.io.File;
@@ -64,6 +66,9 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
 public abstract class BaseBrowserFragment extends Fragment implements View.OnClickListener,
         FragmentLifecycle, SearchView.OnQueryTextListener {
@@ -93,14 +98,14 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
     protected boolean mSupportsSearching = true;
 
     private ActionMode mActionMode;
-    protected TextView mPath;
+    @Bind(R.id.path) TextView mPath;
     private SearchView mSearchView;
-    private SwipeRefreshLayout mRefreshLayout;
-    protected ProgressBar mProgress;
+    @Bind(R.id.swipe_refresh) SwipeRefreshLayout mRefreshLayout;
+    @Bind(R.id.progress) ProgressBar mProgress;
     protected ProgressDialog mProgressDialog;
-    protected RecyclerView mRecyclerView;
+    @Bind(R.id.list) RecyclerView mRecyclerView;
     protected ViewAdapter mAdapter;
-    protected final Executor mExecutor = Executors.newSingleThreadExecutor();
+    protected final Executor mExecutor = Executors.newFixedThreadPool(2);
     protected ArrayList<BaseFile> mFiles = new ArrayList<>();
 
     protected boolean mExitOnBack = false;
@@ -175,6 +180,8 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_browser, container, false);
 
+        ButterKnife.bind(this, rootView);
+
         String defaultDir = null;
         Bundle extras = getArguments();
 
@@ -186,24 +193,16 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         }
         mCurrentPath = defaultDir;
 
-        mPath = (TextView) rootView.findViewById(R.id.path);
-
         mAdapter = new ViewAdapter();
 
-        mProgress = (ProgressBar) rootView.findViewById(R.id.progress);
         mProgress.setIndeterminate(true);
-
-        mRefreshLayout =
-                (SwipeRefreshLayout) rootView.findViewById(R.id.swipe_refresh);
         mRefreshLayout.setColorSchemeColors(ThemeActivity.getAccentColor(getActivity()));
         mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                onClickFile(mCurrentPath);
+                refreshFiles();
             }
         });
-
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.list);
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(mContext);
         mRecyclerView.setHasFixedSize(true);
@@ -218,6 +217,10 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         mProgressDialog.setMax(100);
 
         return rootView;
+    }
+
+    public void refreshFiles() {
+        onClickFile(mCurrentPath);
     }
 
     public void showProgressDialog(@StringRes final int title, final boolean indeterminate) {
@@ -251,8 +254,10 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mRefreshLayout.setRefreshing(true);
-                //mProgress.setVisibility(View.VISIBLE);
+                //mRefreshLayout.setRefreshing(true);
+                if (mProgress != null) {
+                    mProgress.setVisibility(View.VISIBLE);
+                }
             }
         });
     }
@@ -261,8 +266,12 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mRefreshLayout.setRefreshing(false);
-                //mProgress.setVisibility(View.GONE);
+                if (mRefreshLayout != null) {
+                    mRefreshLayout.setRefreshing(false);
+                }
+                if (mProgress != null) {
+                    mProgress.setVisibility(View.GONE);
+                }
             }
         });
     }
@@ -413,7 +422,9 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         for (BaseFile file : SelectedFiles.getFiles()) {
             if (file.exists()) {
                 if (!file.isDirectory()) {
-                    uris.add(Uri.fromFile(file.getFile()));
+                    if (file instanceof BasicFile) {
+                        uris.add(Uri.fromFile((File) file.getRealFile()));
+                    }
                 }
             }
         }
@@ -599,10 +610,6 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View v = inflater.inflate(R.layout.item, parent, false);
             BrowserViewHolder vh = new BrowserViewHolder(v);
-            vh.icon = (ImageView) v.findViewById(R.id.image);
-            vh.title = (TextView) v.findViewById(R.id.title);
-            vh.date = (TextView) v.findViewById(R.id.date);
-            vh.info = (TextView) v.findViewById(R.id.info);
             return vh;
         }
 
@@ -714,13 +721,18 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                 case ACTION_ADD_FOLDER:
                 case MENU_RENAME:
                     View view = View.inflate(getOwner().mContext, R.layout.add_folder, null);
-                    final EditText folderName = (EditText) view.findViewById(R.id.folder_name);
-                    final File file;
+                    final EditText folderName = findById(view, R.id.folder_name);
+                    File fil = null;
                     if (SelectedFiles.getFiles().size() > 0) {
-                        file = SelectedFiles.getFiles().get(0).getFile();
-                    } else {
-                        file = new File("");
+                        BaseFile f = SelectedFiles.getFiles().get(0);
+                        if (f instanceof BasicFile) {
+                            fil = (File) f.getRealFile();
+                        }
                     }
+                    if (fil == null) {
+                        fil = new File("");
+                    }
+                    final File file = fil;
                     if (id == ACTION_ADD_FOLDER) {
                         builder.setTitle(R.string.create_folder);
                         folderName.setHint(R.string.folder_name_hint);
@@ -800,15 +812,15 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                         }
                     };
                     if (id == MENU_RENAME) {
-                        ((Button) view.findViewById(R.id.create)).setText(R.string.rename);
+                        ((Button) findById(view, R.id.create)).setText(R.string.rename);
                     }
-                    view.findViewById(R.id.cancel).setOnClickListener(listener);
-                    view.findViewById(R.id.create).setOnClickListener(listener);
+                    findById(view, R.id.cancel).setOnClickListener(listener);
+                    findById(view, R.id.create).setOnClickListener(listener);
                     return builder.create();
                 case MENU_ARCHIVE:
                     View v = View.inflate(getOwner().mContext, R.layout.archive, null);
-                    final Spinner archiveType = (Spinner) v.findViewById(R.id.archive_type);
-                    final EditText archiveName = (EditText) v.findViewById(R.id.archive_name);
+                    final Spinner archiveType = findById(v, R.id.archive_type);
+                    final EditText archiveName = findById(v, R.id.archive_name);
                     if (SelectedFiles.getFiles().size() == 1) {
                         builder.setTitle(SelectedFiles.getFiles().get(0).getName());
                     } else {
@@ -855,18 +867,17 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
     public class BrowserViewHolder extends MultiChoiceViewHolder
             implements View.OnClickListener, View.OnLongClickListener {
 
-        public View main;
-        public TextView title;
-        public TextView date;
-        public TextView info;
-        public ImageView icon;
+        @Bind(R.id.title) public TextView title;
+        @Bind(R.id.date) public TextView date;
+        @Bind(R.id.info) public TextView info;
+        @Bind(R.id.image) public ImageView icon;
 
         public BrowserViewHolder(View v) {
             super(v, mMultiSelector);
-            main = v;
-            main.setOnClickListener(this);
-            main.setOnLongClickListener(this);
-            main.setLongClickable(true);
+            ButterKnife.bind(this, v);
+            v.setOnClickListener(this);
+            v.setOnLongClickListener(this);
+            v.setLongClickable(true);
         }
 
         public void onClick(View view) {

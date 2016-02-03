@@ -77,13 +77,14 @@
 
     </RelativeLayout>
 
-    <android.support.design.widget.NavigationView
+    <com.appeaser.sublimenavigationviewlibrary.SublimeNavigationView
+        style="@style/NavigationViewStyle"
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header"
-        app:menu="@menu/nav_drawer" />
+        app:snvHeaderLayout="@layout/nav_header"
+        app:snvMenu="@menu/nav_drawer"/>
 
 </android.support.v4.widget.DrawerLayout>
