@@ -1,17 +1,17 @@
 package com.slim.slimfilemanager.multichoice;
 
+import android.animation.AnimatorInflater;
+import android.animation.StateListAnimator;
 import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.support.v7.widget.RebindReportingHolder;
 import android.util.StateSet;
-import android.util.TypedValue;
 import android.view.View;
 
 import com.slim.slimfilemanager.R;
+import com.slim.slimfilemanager.ThemeActivity;
 
 public class MultiChoiceViewHolder extends RebindReportingHolder
         implements SelectableHolder {
@@ -23,16 +23,34 @@ public class MultiChoiceViewHolder extends RebindReportingHolder
     private Drawable mSelectionModeBackgroundDrawable;
     private Drawable mDefaultModeBackgroundDrawable;
 
+    private StateListAnimator mSelectionModeAnimator;
+    private StateListAnimator mDefaultAnimator;
+
     public MultiChoiceViewHolder(View view, MultiSelector selector) {
         super(view);
 
         mMultiSelector = selector;
+
+        setSelectionModeAnimator(getRaiseStateListAnimator(itemView.getContext()));
+        setDefaultAnimator(itemView.getStateListAnimator());
 
         // Default selection mode background drawable is this
         setSelectionModeBackgroundDrawable(
                 getAccentStateDrawable(itemView.getContext()));
         setDefaultModeBackgroundDrawable(
                 itemView.getBackground());
+    }
+
+    private void setSelectionModeAnimator(StateListAnimator animator) {
+        mSelectionModeAnimator = animator;
+    }
+
+    private void setDefaultAnimator(StateListAnimator animator) {
+        mDefaultAnimator = animator;
+    }
+
+    private static StateListAnimator getRaiseStateListAnimator(Context context) {
+        return AnimatorInflater.loadStateListAnimator(context, R.anim.raise);
     }
 
     public void setSelectionModeBackgroundDrawable(Drawable selectionModeBackgroundDrawable) {
@@ -74,14 +92,17 @@ public class MultiChoiceViewHolder extends RebindReportingHolder
         if (backgroundDrawable != null) {
             backgroundDrawable.jumpToCurrentState();
         }
+
+        StateListAnimator animator = mIsSelectable ? mSelectionModeAnimator : mDefaultAnimator;
+        itemView.setStateListAnimator(animator);
+        if (animator != null) {
+            animator.jumpToCurrentState();
+        }
     }
 
     private Drawable getAccentStateDrawable(Context context) {
-        TypedValue typedValue = new TypedValue();
-        Resources.Theme theme = context.getTheme();
-        theme.resolveAttribute(R.attr.colorAccent, typedValue, true);
 
-        Drawable colorDrawable = new ColorDrawable(getAccentColor(context));
+        Drawable colorDrawable = new ColorDrawable(ThemeActivity.getAccentColor(context));
 
         StateListDrawable stateListDrawable = new StateListDrawable();
         stateListDrawable.addState(new int[]{android.R.attr.state_activated}, colorDrawable);
@@ -93,11 +114,5 @@ public class MultiChoiceViewHolder extends RebindReportingHolder
     @Override
     protected void onRebind() {
         mMultiSelector.bindHolder(this, getAdapterPosition());
-    }
-
-    @SuppressWarnings("deprecation")
-    private static int getAccentColor(Context context) {
-        int c = context.getResources().getColor(R.color.accent);
-        return Color.argb(99, Color.red(c), Color.green(c), Color.blue(c));
     }
 }

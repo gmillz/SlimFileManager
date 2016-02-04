@@ -287,7 +287,9 @@ public class DropboxFragment extends BaseBrowserFragment {
                         File tempFile = new File(Utils.getCacheDir() + File.separator + "temp"
                                 + name);
                         if (!tempFile.getParentFile().exists()) {
-                            tempFile.getParentFile().mkdirs();
+                            if (!tempFile.getParentFile().mkdirs()) {
+                                Log.e("Failed to create folder " + tempFile.getParent());
+                            }
                         }
                         if (tempFile.createNewFile()) {
                             String path = mCurrentPath + File.separator + name;
