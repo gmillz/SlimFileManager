@@ -36,6 +36,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.balysv.materialripple.MaterialRippleLayout;
 import com.slim.slimfilemanager.FileManager;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;

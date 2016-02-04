@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.balysv.materialripple.MaterialRippleLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/item_height"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:mrl_rippleColor="?android:attr/colorAccent">
+
+    <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:paddingStart="10dp"
     android:paddingEnd="10dp"
     android:background="?android:attr/selectableItemBackground"
@@ -77,3 +83,4 @@
         android:textSize="12sp" />
 
 </RelativeLayout>
+</com.balysv.materialripple.MaterialRippleLayout>
