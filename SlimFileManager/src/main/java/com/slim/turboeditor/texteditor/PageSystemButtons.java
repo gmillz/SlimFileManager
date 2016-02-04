@@ -21,6 +21,7 @@ package com.slim.turboeditor.texteditor;
 
 import android.content.Context;
 import android.os.Handler;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 
 import com.getbase.floatingactionbutton.FloatingActionButton;
@@ -46,11 +47,13 @@ public class PageSystemButtons {
         this.next = next;
         this.pageButtonsInterface = pageButtonsInterface;
 
-        this.next.setBackgroundColor(context.getResources().getColor(R.color.fab_light));
-        this.next.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_keyboard_arrow_right));
+        this.next.setBackgroundColor(ContextCompat.getColor(context, R.color.fab_light));
+        this.next.setImageDrawable(
+                ContextCompat.getDrawable(context, R.drawable.ic_keyboard_arrow_right));
 
-        this.prev.setBackgroundColor(context.getResources().getColor(R.color.fab_light));
-        this.prev.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_keyboard_arrow_left));
+        this.prev.setBackgroundColor(ContextCompat.getColor(context, R.color.fab_light));
+        this.prev.setImageDrawable(
+                ContextCompat.getDrawable(context, R.drawable.ic_keyboard_arrow_left));
 
         if (pageButtonsInterface.canReadNextPage())
             next.setVisibility(View.VISIBLE);

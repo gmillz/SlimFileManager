@@ -41,7 +41,6 @@ public class RootUtils {
     }
 
     public static CommandOutput runCommand(String cmd) {
-        if (!isRootAvailable()) return null;
         CommandOutput output = new CommandOutput();
         try {
             Process process = Runtime.getRuntime().exec("su");

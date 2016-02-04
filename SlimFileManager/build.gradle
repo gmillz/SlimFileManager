@@ -56,6 +56,9 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.4'
     compile 'com.joanzapata.pdfview:android-pdfview:1.0.4@aar'
     compile 'co.trikita:log:1.1.5'
+    compile 'io.reactivex:rxjava:1.1.0'
+    compile 'io.reactivex:rxandroid:1.1.0'
+
 
     compile files('libs/juniversalchardet-1.0.3.jar')
     compile files('libs/dropbox-android-sdk-1.6.3.jar')

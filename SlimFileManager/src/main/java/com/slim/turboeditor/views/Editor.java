@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
@@ -114,7 +115,7 @@ public class Editor extends EditText {
         mPaintNumbers.setAntiAlias(true);
         mPaintNumbers.setDither(false);
         mPaintNumbers.setTextAlign(Paint.Align.RIGHT);
-        mPaintNumbers.setColor(getResources().getColor(R.color.file_text));
+        mPaintNumbers.setColor(ContextCompat.getColor(getContext(), R.color.file_text));
 
         /*if (PreferenceHelper.getLightTheme(getContext())) {
             setTextColor(getResources().getColor(R.color.textColorInverted));
@@ -195,8 +196,6 @@ public class Editor extends EditText {
                 EditTextPadding.getPaddingTop(context),
                 EditTextPadding.getPaddingTop(context),
                 0);
-        // add a padding from bottom
-        mScrollView.setPadding(0, 0, 0, EditTextPadding.getPaddingBottom(context));
     }
 
     //region OVERRIDES
@@ -592,24 +591,24 @@ public class Editor extends EditText {
                 || pattern.equals(Patterns.LUA_KEYWORDS)
 
                 ) {
-            color = getResources().getColor(R.color.syntax_keyword);
+            color = ContextCompat.getColor(getContext(), R.color.syntax_keyword);
         } else if (pattern.equals(Patterns.HTML_ATTRS)
                 || pattern.equals(Patterns.CSS_ATTRS)
                 || pattern.equals(Patterns.LINK)) {
-            color = getResources().getColor(R.color.syntax_attr);
+            color = ContextCompat.getColor(getContext(), R.color.syntax_attr);
         } else if (pattern.equals(Patterns.CSS_ATTR_VALUE)) {
-            color = getResources().getColor(R.color.syntax_attr_value);
+            color = ContextCompat.getColor(getContext(), R.color.syntax_attr_value);
         } else if (pattern.equals(Patterns.XML_COMMENTS)
                 || pattern.equals(Patterns.GENERAL_COMMENTS)
                 || pattern.equals(Patterns.GENERAL_COMMENTS_NO_SLASH)) {
-            color = getResources().getColor(R.color.syntax_comment);
+            color = ContextCompat.getColor(getContext(), R.color.syntax_comment);
         } else if (pattern.equals(Patterns.GENERAL_STRINGS)) {
-            color = getResources().getColor(R.color.syntax_string);
+            color = ContextCompat.getColor(getContext(), R.color.syntax_string);
         } else if (pattern.equals(Patterns.NUMBERS) || pattern.equals(Patterns.SYMBOLS)
                 || pattern.equals(Patterns.NUMBERS_OR_SYMBOLS)) {
-            color = getResources().getColor(R.color.syntax_number);
+            color = ContextCompat.getColor(getContext(), R.color.syntax_number);
         } else if (pattern.equals(Patterns.PHP_VARIABLES)) {
-            color = getResources().getColor(R.color.syntax_variable);
+            color = ContextCompat.getColor(getContext(), R.color.syntax_variable);
         }
 
         Matcher matcher = pattern.matcher(textToHighlight);

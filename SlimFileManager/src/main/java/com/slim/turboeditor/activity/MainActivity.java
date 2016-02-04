@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -47,11 +48,11 @@ import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
 import com.slim.slimfilemanager.settings.SettingsProvider;
+import com.slim.slimfilemanager.utils.FileUtil;
 import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.turboeditor.dialogfragment.FindTextDialog;
 import com.slim.turboeditor.dialogfragment.NumberPickerDialog;
 import com.slim.turboeditor.dialogfragment.SaveFileDialog;
-import com.slim.turboeditor.task.SaveFileTask;
 import com.slim.turboeditor.texteditor.FileUtils;
 import com.slim.turboeditor.texteditor.LineUtils;
 import com.slim.turboeditor.texteditor.PageSystem;
@@ -75,11 +76,18 @@ import java.util.concurrent.Executors;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import rx.Observable;
+import rx.Observer;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+import trikita.log.Log;
 
 public class MainActivity extends ThemeActivity implements FindTextDialog
         .SearchDialogInterface, GoodScrollView.ScrollInterface, PageSystem.PageSystemInterface,
         PageSystemButtons.PageButtonsInterface, NumberPickerDialog.INumberPickerDialog,
-        SaveFileDialog.ISaveDialog {
+        SaveFileDialog.ISaveDialog, Observer<Boolean> {
 
     //region VARIABLES
     private static final int READ_REQUEST_CODE = 42,
@@ -127,6 +135,10 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
 
         setContentView(R.layout.activity_home);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitle(R.string.text_editor);
+
         ButterKnife.bind(this);
 
         mProgressDialog = new ProgressDialog(this);
@@ -148,6 +160,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     @Override
     public void onResume() {
         super.onResume();
+        Log.d("onResume");
     }
 
     @Override
@@ -167,6 +180,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     @Override
     public void onPause() {
         super.onPause();
+        Log.d("onPause");
 
         if (mNewFileTask != null) {
             mNewFileTask.cancel(true);
@@ -269,16 +283,17 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
                 }
 
                 if (requestCode == SAVE_AS_REQUEST_CODE) {
-
-                    new SaveFileTask(this, newFile, pageSystem
-                            .getAllText(mEditor.getText().toString()),
-                            currentEncoding, new SaveFileTask.SaveFileInterface() {
-                        @Override
-                        public void fileSaved(Boolean success) {
-                            savedAFile(success);
-                            newFileToOpen(newFile, "");
-                        }
-                    }).execute();
+                    getSaveFileObservable(getApplicationContext(), newFile,
+                            pageSystem.getAllText(mEditor.getText().toString()), currentEncoding)
+                            .subscribeOn(Schedulers.newThread())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(new Action1<Boolean>() {
+                                @Override
+                                public void call(Boolean aBoolean) {
+                                    savedAFile(aBoolean);
+                                    newFileToOpen(newFile, "");
+                                }
+                            });
                 }
             }
         }
@@ -468,13 +483,18 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
 
     public void saveTheFile(final boolean saveAs) {
         if (!saveAs && mFile != null && mFile.exists()) {
-            new SaveFileTask(this, mFile, pageSystem.getAllText(mEditor.getText()
-                    .toString()), currentEncoding, new SaveFileTask.SaveFileInterface() {
-                @Override
-                public void fileSaved(Boolean success) {
-                    savedAFile(success);
-                }
-            }).execute();
+            Observable<Boolean> saveFile = getSaveFileObservable(getApplicationContext(), mFile,
+                    pageSystem.getAllText(mEditor.getText().toString()), currentEncoding)
+                    .subscribeOn(Schedulers.newThread())
+                    .observeOn(AndroidSchedulers.mainThread()).cache();
+
+            saveFile.subscribe(new Action1<Boolean>() {
+                        @Override
+                        public void call(Boolean aBoolean) {
+                            Log.d("call(" + aBoolean + ")");
+                            savedAFile(aBoolean);
+                        }
+                    });
         } else {
             Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
             intent.setType("*/*");
@@ -573,8 +593,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     }
 
     public void updateTextSyntax() {
-        if (mEditor.hasSelection() ||
-                updateHandler == null || colorRunnable_duringEditing == null)
+        if (mEditor.hasSelection())
             return;
 
         updateHandler.removeCallbacks(colorRunnable_duringEditing);
@@ -603,6 +622,24 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         mNewFileTask.setNewFile(newFile);
         mNewFileTask.setNewFileText(newFileText);
         mNewFileTask.executeOnExecutor(mExecutor);
+    }
+
+    @Override
+    public void onCompleted() {
+        Toast.makeText(this,
+                String.format(getString(R.string.file_saved_with_success), mFile.getName()),
+                Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        Toast.makeText(this, e.getMessage(),
+                Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onNext(Boolean b) {
+        savedAFile(b);
     }
 
     private static class NewFileTask extends AsyncTask<Void, Void, String> {
@@ -914,8 +951,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     public void onScrollChanged(int l, int t, int oldl, int oldt) {
         pageSystemButtons.updateVisibility(Math.abs(t) > 10);
 
-        if ((mEditor.hasSelection() && searchResult == null)
-                || updateHandler == null || colorRunnable_duringScroll == null)
+        if (mEditor.hasSelection() && searchResult == null)
             return;
 
         updateHandler.removeCallbacks(colorRunnable_duringEditing);
@@ -971,4 +1007,29 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
             onPreferencesChanged(key);
         }
     };
+
+    public Observable<Boolean> getSaveFileObservable(final Context context, final File file,
+                                                      final String newContent,
+                                                      final String encoding) {
+        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(Subscriber<? super Boolean> subscriber) {
+                try {
+                    String filePath = mFile.getAbsolutePath();
+                    // if the uri has no path
+                    if (TextUtils.isEmpty(filePath)) {
+                        FileUtil.writeUri(context, Uri.fromFile(file), newContent, encoding);
+                    } else {
+                        FileUtil.writeFile(context, newContent, file, encoding);
+                    }
+                    subscriber.onNext(true);
+                    subscriber.onCompleted();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    subscriber.onNext(false);
+                    subscriber.onError(e);
+                }
+            }
+        });
+    }
 }

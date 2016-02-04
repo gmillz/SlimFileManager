@@ -15,19 +15,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.design.widget.AppBarLayout
+        <include
             android:id="@+id/app_bar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/AppTheme.AppBarOverlay">
-
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="?attr/colorPrimary" />
-
-        </android.support.design.widget.AppBarLayout>
+            layout="@layout/app_bar" />
 
         <com.slim.slimfilemanager.widget.TabPageIndicator
             android:id="@+id/tab_indicator"

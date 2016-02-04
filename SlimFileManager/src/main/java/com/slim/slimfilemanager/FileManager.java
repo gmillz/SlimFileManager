@@ -53,6 +53,7 @@ import com.slim.slimfilemanager.widget.TabPageIndicator;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import trikita.log.Log;
 
 public class FileManager extends ThemeActivity implements View.OnClickListener,
         OnNavigationMenuEventListener {
@@ -494,6 +495,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     // TODO: update this for new nav drawer
     public void getExternalSDCard() {
         String secondaryStorage = System.getenv("SECONDARY_STORAGE");
+        Log.d(secondaryStorage);
         Set<String> sec = new HashSet<>();
         if (!TextUtils.isEmpty(secondaryStorage)) {
             String[] secs = secondaryStorage.split(File.pathSeparator);

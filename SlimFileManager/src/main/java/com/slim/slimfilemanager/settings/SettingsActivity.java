@@ -1,9 +1,11 @@
 package com.slim.slimfilemanager.settings;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
 
+import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
 
 public class SettingsActivity extends ThemeActivity {
@@ -12,10 +14,16 @@ public class SettingsActivity extends ThemeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getActionBar() != null) getActionBar().setDisplayHomeAsUpEnabled(true);
+        setContentView(R.layout.settings_activity);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitle(R.string.action_settings);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         getFragmentManager().beginTransaction()
-                .replace(android.R.id.content, new SettingsFragment()).commit();
+                .replace(R.id.fragment, new SettingsFragment()).commit();
     }
 
     public void onUpdateTheme() {

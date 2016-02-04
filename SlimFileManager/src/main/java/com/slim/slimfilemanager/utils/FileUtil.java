@@ -1,6 +1,9 @@
 package com.slim.slimfilemanager.utils;
 
+import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.text.TextUtils;
 import trikita.log.Log;
 
@@ -12,7 +15,9 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 public class FileUtil {
 
@@ -224,6 +229,17 @@ public class FileUtil {
             if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)) {
                 RootUtils.renameFile(oldFile, newFile);
             }
+        }
+    }
+
+    public static void writeUri(Context context,
+                          Uri uri, String newContent, String encoding) throws IOException {
+        ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "w");
+        if (pfd != null) {
+            FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
+            fileOutputStream.write(newContent.getBytes(Charset.forName(encoding)));
+            fileOutputStream.close();
+            pfd.close();
         }
     }
 }
