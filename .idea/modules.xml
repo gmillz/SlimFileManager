@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SlimFileManager.iml" filepath="$PROJECT_DIR$/SlimFileManager.iml" />
       <module fileurl="file://$PROJECT_DIR$/SlimFileManager/SlimFileManager-SlimFileManager.iml" filepath="$PROJECT_DIR$/SlimFileManager/SlimFileManager-SlimFileManager.iml" />
+      <module fileurl="file://$PROJECT_DIR$/settingscards/settingscards.iml" filepath="$PROJECT_DIR$/settingscards/settingscards.iml" />
     </modules>
   </component>
 </project>

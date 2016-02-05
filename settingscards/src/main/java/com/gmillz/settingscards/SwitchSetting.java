@@ -1,28 +1,31 @@
-package com.slim.settings;
+package com.gmillz.settingscards;
 
 import android.content.Context;
+import android.support.annotation.StringRes;
 import android.support.v7.widget.SwitchCompat;
 import android.view.View;
 import android.widget.CompoundButton;
 
-import com.slim.slimfilemanager.settings.SettingsProvider;
-
-public class SwitchSetting extends BaseSetting<SwitchHolder> {
+public class SwitchSetting extends SettingBase {
 
     private SwitchCompat mSwitch;
 
-    public SwitchSetting(final Context context) {
-        super(context);
+    public SwitchSetting(@StringRes int title, @StringRes int summary, String key) {
+        super(title, summary, key);
+    }
 
-        mSwitch = new SwitchCompat(context);
-        setExtraView(mSwitch);
-
-        setOnClickListener(new OnClickListener() {
+    @Override
+    public View getView(final Context context) {
+        View v = super.getView(context);
+        v.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mSwitch.setChecked(!mSwitch.isChecked());
             }
         });
+
+        mSwitch = new SwitchCompat(context);
+        setExtraView(mSwitch);
 
         mSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -30,8 +33,10 @@ public class SwitchSetting extends BaseSetting<SwitchHolder> {
                 if (mOnSettingChanged != null) {
                     mOnSettingChanged.onSettingChanged(SwitchSetting.this, b);
                 }
-                SettingsProvider.put(context, mKey, b);
+                SettingsHandler.put(context, mKey, b);
             }
         });
+
+        return v;
     }
 }

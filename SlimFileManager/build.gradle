@@ -79,4 +79,6 @@ dependencies {
 
     // testing
     compile(name: 'commons-debug', ext: 'aar')
+
+    compile project(':settingscards')
 }

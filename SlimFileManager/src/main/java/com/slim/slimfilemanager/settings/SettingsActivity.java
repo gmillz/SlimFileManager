@@ -4,26 +4,23 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
-import com.slim.settings.BaseSetting;
-import com.slim.settings.CategoryHolder;
-import com.slim.settings.ListHolder;
-import com.slim.settings.SettingsArray;
-import com.slim.settings.SettingsContainer;
-import com.slim.settings.SwitchHolder;
+import com.gmillz.settingscards.ListSetting;
+import com.gmillz.settingscards.SettingBase;
+import com.gmillz.settingscards.SettingsCategory;
+import com.gmillz.settingscards.SettingsContainer;
+import com.gmillz.settingscards.SwitchSetting;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
 
 import trikita.log.Log;
 
-public class SettingsActivity extends ThemeActivity implements BaseSetting.OnSettingChanged {
+public class SettingsActivity extends ThemeActivity implements SettingBase.OnSettingChanged {
 
-    private SettingsArray mSettings = new SettingsArray();
+    SettingsContainer mSettings;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        populateSettings();
 
         setContentView(R.layout.settings_activity);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -33,31 +30,33 @@ public class SettingsActivity extends ThemeActivity implements BaseSetting.OnSet
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        SettingsContainer container = (SettingsContainer) findViewById(R.id.settings_container);
-        container.setSettings(mSettings);
+        mSettings = (SettingsContainer) findViewById(R.id.settings_container);
+        populateSettings();
     }
 
     public void populateSettings() {
-        CategoryHolder categoryHolder = new CategoryHolder(R.string.file_manager);
-        mSettings.addSetting(categoryHolder,
-                new SwitchHolder(R.string.enable_root_title, 0, SettingsProvider.KEY_ENABLE_ROOT));
-        mSettings.addSetting(categoryHolder,
-                new SwitchHolder(R.string.use_small_page_indicator,
+        SettingsCategory category = new SettingsCategory(R.string.file_manager);
+        mSettings.addSetting(category,
+                new SwitchSetting(R.string.enable_root_title, 0, SettingsProvider.KEY_ENABLE_ROOT));
+        mSettings.addSetting(category,
+                new SwitchSetting(R.string.use_small_page_indicator,
                         R.string.small_page_indicator_summary, SettingsProvider.SMALL_INDICATOR));
 
-        mSettings.addSetting(categoryHolder,
-                new ListHolder(R.string.sort_mode_title, 0, SettingsProvider.SORT_MODE)
+        mSettings.addSetting(category,
+                new ListSetting(R.string.sort_mode_title, 0, SettingsProvider.SORT_MODE)
                         .setSummaryToValue(true)
                         .setEntries(R.array.sort_mode_entries)
                         .setValues(R.array.sort_mode_values));
 
-        categoryHolder = new CategoryHolder(R.string.text_editor);
-        mSettings.addSetting(categoryHolder,
-                new SwitchHolder(R.string.use_monospace, 0, SettingsProvider.USE_MONOSPACE));
+        category = new SettingsCategory(R.string.text_editor);
+        mSettings.addSetting(category,
+                new SwitchSetting(R.string.use_monospace, 0, SettingsProvider.USE_MONOSPACE));
+
+        mSettings.recreate();
     }
 
     @Override
-    public void onSettingChanged(BaseSetting setting, Object newValue) {
+    public void onSettingChanged(SettingBase setting, Object newValue) {
         Log.d(setting.getKey() + " : " + newValue);
     }
 

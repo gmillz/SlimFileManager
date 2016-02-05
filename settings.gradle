@@ -1,1 +1,1 @@
-include ':SlimFileManager'
+include ':SlimFileManager', ':settingscards'

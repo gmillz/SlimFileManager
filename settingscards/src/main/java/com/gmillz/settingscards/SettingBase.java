@@ -1,4 +1,4 @@
-package com.slim.settings;
+package com.gmillz.settingscards;
 
 import android.content.Context;
 import android.support.annotation.StringRes;
@@ -9,32 +9,41 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class BaseSetting<T extends SettingHolder> extends RelativeLayout {
+public class SettingBase {
 
+    @StringRes
+    public int mTitleId;
+
+    @StringRes
+    public int mSummaryId;
+
+    public String mKey;
+
+    private RelativeLayout mLayout;
     private TextView mTitle;
     private TextView mSummary;
     private FrameLayout mExtraView;
 
-    protected String mKey;
-
-    protected T mHolder;
     protected Object mDefault;
 
     protected OnSettingClicked mOnSettingClicked;
     protected OnSettingChanged mOnSettingChanged;
 
-    public BaseSetting(Context context) {
-        super(context);
-        setupView(context);
+    public SettingBase(@StringRes int title, @StringRes int summary, String key) {
+        mTitleId = title;
+        mSummaryId = summary;
+        mKey = key;
     }
 
-    public void setHolder(T holder) {
-        mHolder = holder;
+    public View getView(Context context) {
+        mLayout = new RelativeLayout(context);
+        setupView(context);
+        return mLayout;
     }
 
     protected void setExtraView(View v) {
         mExtraView.addView(v);
-        mExtraView.setVisibility(VISIBLE);
+        mExtraView.setVisibility(View.VISIBLE);
     }
 
     public void setTitle(@StringRes int title) {
@@ -53,18 +62,24 @@ public class BaseSetting<T extends SettingHolder> extends RelativeLayout {
     public void setSummary(@StringRes int summary) {
         if (summary > 0) {
             mSummary.setText(summary);
-            mSummary.setVisibility(VISIBLE);
+            mSummary.setVisibility(View.VISIBLE);
         }
     }
 
-    public void setKey(String key) {
-        mKey = key;
+    public void setTitleColor(int color) {
+        mTitle.setTextColor(color);
     }
 
+    public void setSummaryColor(int color) {
+        mSummary.setTextColor(color);
+    }
+
+    @SuppressWarnings("unused")
     public void setOnSettingClicked(OnSettingClicked onSettingClicked) {
         mOnSettingClicked = onSettingClicked;
     }
 
+    @SuppressWarnings("unused")
     public void setOnSettingChanged(OnSettingChanged onSettingChanged) {
         mOnSettingChanged = onSettingChanged;
     }
@@ -76,44 +91,45 @@ public class BaseSetting<T extends SettingHolder> extends RelativeLayout {
     private void setupView(Context context) {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.bottomMargin = SettingsCategory.convertDpToPixel(16f, getContext());
-        setLayoutParams(params);
+        params.bottomMargin = SettingsCategory.convertDpToPixel(16f, context);
+        mLayout.setLayoutParams(params);
 
-        mTitle = new TextView(getContext());
-        mTitle.setVisibility(VISIBLE);
+        mTitle = new TextView(context);
         mTitle.setId(View.generateViewId());
+        setTitle(mTitleId);
         RelativeLayout.LayoutParams childParams = new RelativeLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         childParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         childParams.addRule(RelativeLayout.ALIGN_PARENT_START);
         mTitle.setTextSize(16f);
-        addView(mTitle, childParams);
+        mLayout.addView(mTitle, childParams);
 
-        mSummary = new TextView(getContext());
+        mSummary = new TextView(context);
         childParams = new RelativeLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         childParams.addRule(RelativeLayout.BELOW, mTitle.getId());
         childParams.addRule(RelativeLayout.ALIGN_PARENT_START);
         mSummary.setTextSize(12f);
-        mSummary.setVisibility(GONE);
-        addView(mSummary, childParams);
+        mSummary.setVisibility(View.GONE);
+        setSummary(mSummaryId);
+        mLayout.addView(mSummary, childParams);
 
-        mExtraView = new FrameLayout(getContext());
+        mExtraView = new FrameLayout(context);
         childParams = new RelativeLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        childParams.addRule(ALIGN_PARENT_END);
-        childParams.addRule(CENTER_VERTICAL);
-        childParams.setMarginStart(SettingsCategory.convertDpToPixel(10f, getContext()));
+        childParams.addRule(RelativeLayout.ALIGN_PARENT_END);
+        childParams.addRule(RelativeLayout.CENTER_VERTICAL);
+        childParams.setMarginStart(SettingsCategory.convertDpToPixel(10f, context));
         mExtraView.setVisibility(View.GONE);
-        addView(mExtraView, childParams);
+        mLayout.addView(mExtraView, childParams);
     }
 
     @SuppressWarnings("unused")
     public interface OnSettingClicked {
-        void onSettingClicked(BaseSetting setting, String key);
+        void onSettingClicked(SettingBase setting, String key);
     }
 
     public interface OnSettingChanged {
-        void onSettingChanged(BaseSetting setting, Object newValue);
+        void onSettingChanged(SettingBase setting, Object newValue);
     }
 }
