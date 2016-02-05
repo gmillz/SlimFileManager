@@ -5,10 +5,18 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.SwitchPreference;
+import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 
+import com.afollestad.materialdialogs.color.ColorChooserDialog;
+import com.afollestad.materialdialogs.util.DialogUtils;
 import com.slim.slimfilemanager.R;
+import com.slim.slimfilemanager.ThemeActivity;
 import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.util.Constant;
+
+import trikita.log.Log;
 
 public class SettingsFragment extends PreferenceFragment {
 
@@ -55,7 +63,7 @@ public class SettingsFragment extends PreferenceFragment {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 SettingsProvider.putInt(getActivity(), SettingsProvider.THEME,
                         Integer.parseInt((String) newValue));
-                ((SettingsActivity) getActivity()).onUpdateTheme();
+                //((SettingsActivity) getActivity()).onUpdateTheme();
                 return true;
             }
         });
@@ -67,5 +75,22 @@ public class SettingsFragment extends PreferenceFragment {
         encoding.setEntries(Constant.ENCODINGS);
         encoding.setEntryValues(Constant.ENCODINGS);
         encoding.setValue(value);
+
+        findPreference("accent_color").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                new ColorChooserDialog.Builder((AppCompatActivity) getActivity(), R.string.action_settings)
+                        .preselect(DialogUtils.resolveColor(getActivity(), android.R.attr.colorAccent))
+                        .setColorCallback(new ColorChooserDialog.ColorCallback() {
+                            @Override
+                            public void onColorSelection(
+                                    @NonNull ColorChooserDialog dialog, @ColorInt int i) {
+                                ThemeActivity.setAccentColor(getActivity(), i);
+                                Log.d(i);
+                            }
+                        }).show();
+                return true;
+            }
+        });
     }
 }

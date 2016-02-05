@@ -420,11 +420,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     private void setupActionButtons() {
         buildActionButtons();
 
-        mActionMenu.setColorNormal(getAccentColor(this));
-        mActionMenu.setColorPressed(Utils.darkenColor(getAccentColor(this)));
+        mActionMenu.setColorNormal(getAccentColor());
+        mActionMenu.setColorPressed(Utils.darkenColor(getAccentColor()));
 
-        mPasteButton.setColorNormal(getAccentColor(this));
-        mPasteButton.setColorPressed(Utils.darkenColor(getAccentColor(this)));
+        mPasteButton.setColorNormal(getAccentColor());
+        mPasteButton.setColorPressed(Utils.darkenColor(getAccentColor()));
         mPasteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -458,8 +458,8 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
     private FloatingActionButton getButton(int icon, int title, int tag) {
         FloatingActionButton button = new FloatingActionButton(this);
-        button.setColorNormalResId(R.color.accent);
-        button.setColorPressedResId(R.color.accent_dark);
+        button.setColorNormal(getAccentColor());
+        button.setColorPressed(Utils.darkenColor(getAccentColor()));
         button.setIcon(icon);
         button.setTitle(getString(title));
         button.setTag(tag);

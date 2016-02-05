@@ -36,7 +36,7 @@ public class MultiChoiceViewHolder extends RebindReportingHolder
 
         // Default selection mode background drawable is this
         setSelectionModeBackgroundDrawable(
-                getAccentStateDrawable(itemView.getContext()));
+                getAccentStateDrawable());
         setDefaultModeBackgroundDrawable(
                 itemView.getBackground());
     }
@@ -100,9 +100,9 @@ public class MultiChoiceViewHolder extends RebindReportingHolder
         }
     }
 
-    private Drawable getAccentStateDrawable(Context context) {
+    private Drawable getAccentStateDrawable() {
 
-        Drawable colorDrawable = new ColorDrawable(ThemeActivity.getAccentColor(context));
+        Drawable colorDrawable = new ColorDrawable(ThemeActivity.getAccentColor());
 
         StateListDrawable stateListDrawable = new StateListDrawable();
         stateListDrawable.addState(new int[]{android.R.attr.state_activated}, colorDrawable);

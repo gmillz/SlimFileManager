@@ -15,11 +15,6 @@
         android:summary="@string/small_page_indicator_summary"/>
 
     <ListPreference
-        android:key="key_theme"
-        android:title="@string/theme_title"
-        android:summary="%s"/>
-
-    <ListPreference
         android:key="sort_mode"
         android:title="@string/sort_mode_title"
         android:summary="%s"
@@ -62,5 +57,26 @@
         manager:max="36"
         manager:defaultValue="16"
         android:summary="%s"/>
+
+    <PreferenceCategory android:title="Theme Settings" />
+
+    <ListPreference
+        android:key="key_theme"
+        android:title="@string/theme_title"
+        android:summary="%s"/>
+
+    <PreferenceScreen
+        android:key="theme_settings"
+        android:title="Colors">
+
+        <Preference
+            android:key="accent_color"
+            android:title="Accent Color" />
+
+        <Preference
+            android:key="primary_color"
+            android:title="Primary Color" />
+
+    </PreferenceScreen>
 
 </PreferenceScreen>

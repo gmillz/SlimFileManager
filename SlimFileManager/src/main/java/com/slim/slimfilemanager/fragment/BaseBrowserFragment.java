@@ -202,7 +202,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         mAdapter = new ViewAdapter();
 
         mProgress.setIndeterminate(true);
-        mRefreshLayout.setColorSchemeColors(ThemeActivity.getAccentColor(getActivity()));
+        mRefreshLayout.setColorSchemeColors(ThemeActivity.getAccentColor());
         mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -260,8 +260,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                //mRefreshLayout.setRefreshing(true);
-                if (mProgress != null) {
+                if (!mRefreshLayout.isRefreshing()) {
                     mProgress.setVisibility(View.VISIBLE);
                 }
             }
@@ -272,10 +271,9 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (mRefreshLayout != null) {
+                if (mRefreshLayout.isRefreshing()) {
                     mRefreshLayout.setRefreshing(false);
-                }
-                if (mProgress != null) {
+                } else {
                     mProgress.setVisibility(View.GONE);
                 }
             }

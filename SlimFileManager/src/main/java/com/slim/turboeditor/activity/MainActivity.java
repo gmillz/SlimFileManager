@@ -196,7 +196,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         try {
             closeKeyBoard();
         } catch (NullPointerException e) {

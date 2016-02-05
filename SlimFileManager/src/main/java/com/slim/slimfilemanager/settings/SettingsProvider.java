@@ -51,12 +51,26 @@ public class SettingsProvider {
         return get(context).edit();
     }
 
+    public static void put(Context context, String key, Object o) {
+        if (o instanceof Boolean) {
+            put(context).putBoolean(key, (Boolean) o).apply();
+        } else if (o instanceof String) {
+            put(context).putString(key, (String) o).apply();
+        } else if (o instanceof Integer) {
+            put(context).putInt(key, (Integer) o).apply();
+        }
+    }
+
     public static String getString(Context context, String key, String defValue) {
         return get(context).getString(key, defValue);
     }
 
     public static boolean getBoolean(Context context, String key, boolean defValue) {
         return get(context).getBoolean(key, defValue);
+    }
+
+    public static void putBoolean(Context context, String key, boolean b) {
+        put(context).putBoolean(key, b).apply();
     }
 
     public static int getInt(Context context, String key, int defValue) {
