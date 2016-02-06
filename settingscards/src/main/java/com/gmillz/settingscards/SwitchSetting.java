@@ -25,6 +25,10 @@ public class SwitchSetting extends SettingBase {
         });
 
         mSwitch = new SwitchCompat(context);
+
+        if (mDefault == null) mDefault = false;
+        mSwitch.setChecked(SettingsHandler.getBoolean(context, mKey, (Boolean) mDefault));
+
         setExtraView(mSwitch);
 
         mSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

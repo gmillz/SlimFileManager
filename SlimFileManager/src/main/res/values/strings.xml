@@ -79,6 +79,7 @@
     <string name="back_confirm">Press back again to exit.</string>
 
     <!-- app theme -->
+    <string name="theme_options">Theme options</string>
     <string name="theme_title">Theme</string>
     <string name="dark">Dark</string>
     <string name="light">Light</string>

@@ -1,5 +1,6 @@
 package com.slim.slimfilemanager.settings;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
@@ -8,9 +9,11 @@ import com.gmillz.settingscards.ListSetting;
 import com.gmillz.settingscards.SettingBase;
 import com.gmillz.settingscards.SettingsCategory;
 import com.gmillz.settingscards.SettingsContainer;
+import com.gmillz.settingscards.SettingsTheme;
 import com.gmillz.settingscards.SwitchSetting;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
+import com.slim.util.Constant;
 
 import trikita.log.Log;
 
@@ -31,6 +34,7 @@ public class SettingsActivity extends ThemeActivity implements SettingBase.OnSet
         }
 
         mSettings = (SettingsContainer) findViewById(R.id.settings_container);
+        mSettings.setTheme(new MySettingsTheme(this));
         populateSettings();
     }
 
@@ -45,12 +49,44 @@ public class SettingsActivity extends ThemeActivity implements SettingBase.OnSet
         mSettings.addSetting(category,
                 new ListSetting(R.string.sort_mode_title, 0, SettingsProvider.SORT_MODE)
                         .setSummaryToValue(true)
-                        .setEntries(R.array.sort_mode_entries)
-                        .setValues(R.array.sort_mode_values));
+                        .setEntries(getResources().getStringArray(R.array.sort_mode_entries))
+                        .setValues(getResources().getStringArray(R.array.sort_mode_values)));
 
         category = new SettingsCategory(R.string.text_editor);
         mSettings.addSetting(category,
                 new SwitchSetting(R.string.use_monospace, 0, SettingsProvider.USE_MONOSPACE));
+        mSettings.addSetting(category,
+                new ListSetting(R.string.encoding, 0, SettingsProvider.EDITOR_ENCODING)
+                        .setSummaryToValue(true)
+                        .setEntries(Constant.ENCODINGS)
+                        .setValues(Constant.ENCODINGS)
+                        .setDefault(Constant.DEFAULT_ENCODING));
+        mSettings.addSetting(category,
+                new SwitchSetting(R.string.wrap_content, 0, SettingsProvider.EDITOR_WRAP_CONTENT)
+                        .setDefault(true));
+        mSettings.addSetting(category,
+                new SwitchSetting(R.string.keyboard_suggestions_and_swipe, 0,
+                        SettingsProvider.SUGGESTION_ACTIVE)
+                        .setDefault(false));
+        mSettings.addSetting(category,
+                new SwitchSetting(R.string.split_text_if_too_long, 0, SettingsProvider.SPLIT_TEXT)
+                        .setDefault(true));
+        category = new SettingsCategory(R.string.theme_options);
+
+        String[] entries = new String[] {
+                getString(R.string.light),
+                getString(R.string.dark)
+        };
+        String[] values = new String[] {
+                Integer.toString(R.style.AppTheme),
+                Integer.toString(R.style.AppTheme_Dark)
+        };
+
+        mSettings.addSetting(category,
+                new ListSetting(R.string.theme, 0, SettingsProvider.THEME)
+                        .setEntries(entries)
+                        .setValues(values)
+                        .setDefault(String.valueOf(R.style.AppTheme)));
 
         mSettings.recreate();
     }
@@ -69,5 +105,13 @@ public class SettingsActivity extends ThemeActivity implements SettingBase.OnSet
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public static class MySettingsTheme extends SettingsTheme {
+
+        public MySettingsTheme(Context context) {
+            super(context);
+            colorAccent = ThemeActivity.getAccentColor();
+        }
     }
 }

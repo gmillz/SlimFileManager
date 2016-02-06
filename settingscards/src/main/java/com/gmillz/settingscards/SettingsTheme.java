@@ -2,29 +2,35 @@ package com.gmillz.settingscards;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build;
 import android.support.annotation.AttrRes;
+import android.support.v4.content.ContextCompat;
 import android.util.TypedValue;
 
 @SuppressWarnings("unused")
-class SettingsTheme {
+public class SettingsTheme {
 
-    int colorAccent;
-    int cardBackground = 0xff353535;
-    int pageBackground;
-    int primaryTextColor;
-    int secondaryTextColor;
+    protected int colorAccent;
+    public int cardBackground = 0xff353535;
+    public int pageBackground;
+    public int primaryTextColor;
+    public int secondaryTextColor;
 
     public SettingsTheme(Context context) {
-        colorAccent = Color.WHITE;
-        pageBackground = Color.WHITE;
-        primaryTextColor = Color.WHITE;
-        secondaryTextColor = Color.GRAY;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            colorAccent = getAttrColor(context, android.R.attr.colorAccent);
+        } else {
+            colorAccent = getAttrColor(context, R.attr.colorAccent);
+        }
+        pageBackground = getAttrColor(context, android.R.attr.colorBackground);
+        primaryTextColor = getAttrColor(context, android.R.attr.textColorPrimary);
+        secondaryTextColor = getAttrColor(context, android.R.attr.textColorSecondary);
     }
 
     static int getAttrColor(Context context, @AttrRes int attr) {
-        TypedValue value = new TypedValue();
-        context.getTheme().resolveAttribute(attr, value, true);
-        return value.data;
+        TypedValue tv = new TypedValue();
+        context.getTheme().resolveAttribute(attr, tv, true);
+        return ContextCompat.getColor(context, tv.resourceId);
     }
 
     static boolean isColorDark(int color) {

@@ -14,6 +14,7 @@ public class SettingsContainer extends ScrollView {
     private LinearLayout mContainer;
     private SettingsTheme mTheme;
 
+    private ArrayList<SettingsCategory> mCategories = new ArrayList<>();
     private ArrayMap<SettingsCategory, ArrayList<SettingBase>> mSettings = new ArrayMap<>();
 
     public SettingsContainer(Context context) {
@@ -34,8 +35,13 @@ public class SettingsContainer extends ScrollView {
         addView(mContainer, params);
     }
 
+    public void setTheme(SettingsTheme theme) {
+        mTheme = theme;
+    }
+
     public void recreate() {
-        for (SettingsCategory category : mSettings.keySet()) {
+        setBackgroundColor(mTheme.pageBackground);
+        for (SettingsCategory category : mCategories) {
             mContainer.addView(category.getView(getContext()));
             category.setTitleColor(mTheme.colorAccent);
             category.setCardBackgroundColor(mTheme.cardBackground);
@@ -49,6 +55,7 @@ public class SettingsContainer extends ScrollView {
 
     public void addCategory(SettingsCategory category) {
         if (!mSettings.containsKey(category)) {
+            mCategories.add(category);
             mSettings.put(category, new ArrayList<SettingBase>());
         }
     }

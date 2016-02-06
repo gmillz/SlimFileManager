@@ -46,6 +46,10 @@ public class SettingBase {
         mExtraView.setVisibility(View.VISIBLE);
     }
 
+    public SettingBase setDefault(Object object) {
+        mDefault = object;
+        return this;
+    }
     public void setTitle(@StringRes int title) {
         mTitle.setText(title);
     }
