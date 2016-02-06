@@ -69,16 +69,13 @@ dependencies {
         transitive = true
     }
 
-    //compile('com.github.afollestad.material-dialogs:commons:0.8.5.4@aar') {
-      //  transitive = true
-    //}
+    compile('com.github.afollestad.material-dialogs:commons:0.8.5.4@aar') {
+        transitive = true
+    }
 
     compile files('libs/juniversalchardet-1.0.3.jar')
     compile files('libs/dropbox-android-sdk-1.6.3.jar')
     compile files('libs/json-simple-1.1.1.jar')
-
-    // testing
-    compile(name: 'commons-debug', ext: 'aar')
 
     compile project(':settingscards')
 }

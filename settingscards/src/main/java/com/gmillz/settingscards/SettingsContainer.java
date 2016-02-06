@@ -40,6 +40,7 @@ public class SettingsContainer extends ScrollView {
     }
 
     public void recreate() {
+        mContainer.removeAllViews();
         setBackgroundColor(mTheme.pageBackground);
         for (SettingsCategory category : mCategories) {
             mContainer.addView(category.getView(getContext()));
@@ -47,6 +48,7 @@ public class SettingsContainer extends ScrollView {
             category.setCardBackgroundColor(mTheme.cardBackground);
             for (SettingBase setting : mSettings.get(category)) {
                 category.addView(setting.getView(getContext()));
+                setting.setAccentColor(mTheme.colorAccent);
                 setting.setTitleColor(mTheme.primaryTextColor);
                 setting.setSummaryColor(mTheme.secondaryTextColor);
             }

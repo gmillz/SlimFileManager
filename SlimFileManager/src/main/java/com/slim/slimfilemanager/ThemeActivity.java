@@ -13,8 +13,8 @@ import com.slim.slimfilemanager.settings.SettingsProvider;
 
 public class ThemeActivity extends AppCompatActivity {
 
-    private static final String KEY_PRIMARY_COLOR = "primary_color";
-    private static final String KEY_ACCENT_COLOR = "accent_color";
+    public static final String KEY_PRIMARY_COLOR = "primary_color";
+    public static final String KEY_ACCENT_COLOR = "accent_color";
 
     private int mCurrentTheme;
     private static int sAccentColor;

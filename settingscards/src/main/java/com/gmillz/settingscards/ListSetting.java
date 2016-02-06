@@ -103,7 +103,7 @@ public class ListSetting extends SettingBase implements Application.ActivityLife
     public void onActivityPaused(Activity activity) {
         if (mDialog != null && mDialog.isShowing()) {
             mDialogBundle = mDialog.onSaveInstanceState();
-            mDialog.hide();
+            mDialog.dismiss();
             mDialog = null;
         }
     }

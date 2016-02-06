@@ -2,6 +2,7 @@ package com.gmillz.settingscards;
 
 import android.content.Context;
 import android.support.annotation.StringRes;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -18,6 +19,8 @@ public class SettingBase {
     public int mSummaryId;
 
     public String mKey;
+
+    private CharSequence mSummaryText;
 
     private RelativeLayout mLayout;
     private TextView mTitle;
@@ -59,8 +62,12 @@ public class SettingBase {
     }
 
     public void setSummary(CharSequence summary) {
-        mSummary.setText(summary);
-        mSummary.setVisibility(View.VISIBLE);
+        if (mSummary != null) {
+            mSummary.setText(summary);
+            mSummary.setVisibility(View.VISIBLE);
+        } else {
+            mSummaryText = summary;
+        }
     }
 
     public void setSummary(@StringRes int summary) {
@@ -68,6 +75,9 @@ public class SettingBase {
             mSummary.setText(summary);
             mSummary.setVisibility(View.VISIBLE);
         }
+    }
+
+    public void setAccentColor(int color) {
     }
 
     public void setTitleColor(int color) {
@@ -114,7 +124,11 @@ public class SettingBase {
         childParams.addRule(RelativeLayout.BELOW, mTitle.getId());
         childParams.addRule(RelativeLayout.ALIGN_PARENT_START);
         mSummary.setTextSize(12f);
-        mSummary.setVisibility(View.GONE);
+        if (!TextUtils.isEmpty(mSummaryText)) {
+            setSummary(mSummaryText);
+        } else {
+            mSummary.setVisibility(View.GONE);
+        }
         setSummary(mSummaryId);
         mLayout.addView(mSummary, childParams);
 

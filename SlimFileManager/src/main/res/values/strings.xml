@@ -84,6 +84,9 @@
     <string name="dark">Dark</string>
     <string name="light">Light</string>
 
+    <!-- theme color settings -->
+    <string name="accent_color">Accent color</string>
+
     <!-- permissions-->
     <string name="permissions">Permissions</string>
     <string name="owner">Owner</string>

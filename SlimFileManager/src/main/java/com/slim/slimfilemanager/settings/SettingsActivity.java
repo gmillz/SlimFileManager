@@ -2,9 +2,14 @@ package com.slim.slimfilemanager.settings;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
+import com.afollestad.materialdialogs.color.CircleView;
+import com.afollestad.materialdialogs.color.ColorChooserDialog;
+import com.gmillz.settingscards.BasicSetting;
 import com.gmillz.settingscards.ListSetting;
 import com.gmillz.settingscards.SettingBase;
 import com.gmillz.settingscards.SettingsCategory;
@@ -17,9 +22,12 @@ import com.slim.util.Constant;
 
 import trikita.log.Log;
 
-public class SettingsActivity extends ThemeActivity implements SettingBase.OnSettingChanged {
+public class SettingsActivity extends ThemeActivity implements
+        SettingBase.OnSettingChanged, ColorChooserDialog.ColorCallback {
 
     SettingsContainer mSettings;
+
+    private static String mKey = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -88,7 +96,34 @@ public class SettingsActivity extends ThemeActivity implements SettingBase.OnSet
                         .setValues(values)
                         .setDefault(String.valueOf(R.style.AppTheme)));
 
+        addColorSettings(category);
+
         mSettings.recreate();
+    }
+
+    private void addColorSettings(SettingsCategory category) {
+        BasicSetting accentColorSetting = new BasicSetting(R.string.accent_color, 0,
+                ThemeActivity.KEY_ACCENT_COLOR);
+        accentColorSetting.setSummary(String.valueOf(ThemeActivity.getAccentColor()));
+
+        CircleView circleView = new CircleView(this);
+        circleView.setBackgroundColor(ThemeActivity.getAccentColor());
+        accentColorSetting.addExtraView(circleView);
+
+        accentColorSetting.setOnSettingClicked(new SettingBase.OnSettingClicked() {
+            @Override
+            public void onSettingClicked(SettingBase setting, String key) {
+                mKey = key;
+                new ColorChooserDialog.Builder(SettingsActivity.this, R.string.accent_color)
+                        .accentMode(true)
+                        .allowUserColorInput(true)
+                        .allowUserColorInputAlpha(true)
+                        .preselect(ThemeActivity.getAccentColor())
+                        .show();
+            }
+        });
+
+        mSettings.addSetting(category, accentColorSetting);
     }
 
     @Override
@@ -105,6 +140,16 @@ public class SettingsActivity extends ThemeActivity implements SettingBase.OnSet
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onColorSelection(@NonNull ColorChooserDialog dialog, @ColorInt int selectedColor) {
+        if (mKey.equals(ThemeActivity.KEY_ACCENT_COLOR)) {
+            SettingsProvider.putInt(this, mKey, selectedColor);
+            //mAccentColor.setBackgroundColor(selectedColor);
+            recreate();
+        }
+        mKey = "";
     }
 
     public static class MySettingsTheme extends SettingsTheme {

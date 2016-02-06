@@ -75,22 +75,5 @@ public class SettingsFragment extends PreferenceFragment {
         encoding.setEntries(Constant.ENCODINGS);
         encoding.setEntryValues(Constant.ENCODINGS);
         encoding.setValue(value);
-
-        findPreference("accent_color").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                new ColorChooserDialog.Builder((AppCompatActivity) getActivity(), R.string.action_settings)
-                        .preselect(DialogUtils.resolveColor(getActivity(), android.R.attr.colorAccent))
-                        .setColorCallback(new ColorChooserDialog.ColorCallback() {
-                            @Override
-                            public void onColorSelection(
-                                    @NonNull ColorChooserDialog dialog, @ColorInt int i) {
-                                ThemeActivity.setAccentColor(getActivity(), i);
-                                Log.d(i);
-                            }
-                        }).show();
-                return true;
-            }
-        });
     }
 }
