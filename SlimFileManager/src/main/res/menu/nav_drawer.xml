@@ -2,7 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <Group android:checkableBehavior="single">
+    <Group android:checkableBehavior="single"
+        android:id="@+id/main">
         <Text
             android:id="@+id/nav_sdcard"
             android:checked="true"

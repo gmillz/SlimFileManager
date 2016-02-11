@@ -62,6 +62,14 @@ public class DropboxFragment extends BaseBrowserFragment {
         }
     };
 
+    public static BaseBrowserFragment newInstance(String path) {
+        BaseBrowserFragment fragment = new DropboxFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_PATH, path);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -254,6 +262,7 @@ public class DropboxFragment extends BaseBrowserFragment {
                     @Override
                     protected void onPostExecute(Boolean b) {
                         hideProgressDialog();
+                        refreshFiles();
                     }
                 }.executeOnExecutor(mExecutor);
             }

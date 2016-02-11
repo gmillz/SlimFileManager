@@ -19,6 +19,7 @@ package com.slim.slimfilemanager.widget;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.support.annotation.ColorInt;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
@@ -108,6 +109,16 @@ public class TabPageIndicator extends HorizontalScrollView
             // Recenter the tab display if we're at a new (scrollable) size.
             setCurrentItem(mSelectedTabIndex);
         }
+    }
+
+    public void setSelectedColor(@ColorInt int color) {
+        mSelectedColor = color;
+        requestLayout();
+    }
+
+    public void setUnselectedColor(@ColorInt int color) {
+        mBackgroundColor = color;
+        requestLayout();
     }
 
     public void setTabTitle(String title, int position) {

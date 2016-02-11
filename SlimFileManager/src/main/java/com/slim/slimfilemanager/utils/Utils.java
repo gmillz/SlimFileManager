@@ -110,6 +110,28 @@ public class Utils {
         return Color.rgb((int)(r*.9), (int)(g*.9), (int)(b*.9));
     }
 
+    public static String convertToARGB(int color) {
+        String alpha = Integer.toHexString(Color.alpha(color));
+        String red = Integer.toHexString(Color.red(color));
+        String green = Integer.toHexString(Color.green(color));
+        String blue = Integer.toHexString(Color.blue(color));
+
+        if (alpha.length() == 1) {
+            alpha = "0" + alpha;
+        }
+        if (red.length() == 1) {
+            red = "0" + red;
+        }
+        if (green.length() == 1) {
+            green = "0" + green;
+        }
+        if (blue.length() == 1) {
+            blue = "0" + blue;
+        }
+
+        return "#" + alpha + red + blue + green;
+    }
+
     public static String getCacheDir() {
         File cache = new File(Environment.getExternalStorageDirectory() + "/.file_manager_cache");
         if (!cache.exists()) {

@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class PasteTask {
@@ -71,6 +72,7 @@ public class PasteTask {
             mExistingFiles.remove(key);
             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
             View view = View.inflate(mContext, R.layout.file_exists_dialog, null);
+            ButterKnife.bind(this, view);
 
             ((TextView) findById(view, R.id.source)).setText(mCurrent.getPath());
             ((TextView) findById(view, R.id.destination)).setText(key.getPath());

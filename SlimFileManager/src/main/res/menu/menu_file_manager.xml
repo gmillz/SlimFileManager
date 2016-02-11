@@ -5,6 +5,11 @@
 
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
+        android:orderInCategory="101"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/add_bookmark"
+        android:title="Add Bookmark"
         android:orderInCategory="100"
         app:showAsAction="never" />
 
@@ -12,13 +17,13 @@
         android:title="Close tab"
         android:icon="@drawable/close"
         android:orderInCategory="99"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
 
     <item android:id="@+id/add_tab"
         android:title="Add tab"
         android:icon="@drawable/add"
         android:orderInCategory="98"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
 
     <item android:id="@+id/search"
         android:title="@string/search"

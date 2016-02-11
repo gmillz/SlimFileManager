@@ -85,6 +85,7 @@
     <string name="light">Light</string>
 
     <!-- theme color settings -->
+    <string name="primary_color">Primary color</string>
     <string name="accent_color">Accent color</string>
 
     <!-- permissions-->

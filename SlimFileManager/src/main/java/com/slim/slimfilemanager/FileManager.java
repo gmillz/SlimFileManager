@@ -14,6 +14,8 @@ import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Environment;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -43,9 +45,11 @@ import com.slim.slimfilemanager.fragment.BaseBrowserFragment;
 import com.slim.slimfilemanager.fragment.BrowserFragment;
 import com.slim.slimfilemanager.settings.SettingsActivity;
 import com.slim.slimfilemanager.settings.SettingsProvider;
+import com.slim.slimfilemanager.utils.Bookmark;
 import com.slim.slimfilemanager.utils.FragmentLifecycle;
 import com.slim.slimfilemanager.utils.IconCache;
 import com.slim.slimfilemanager.utils.PasteTask;
+import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.slimfilemanager.utils.Utils;
 import com.slim.slimfilemanager.widget.PageIndicator;
 import com.slim.slimfilemanager.widget.TabItem;
@@ -53,15 +57,18 @@ import com.slim.slimfilemanager.widget.TabPageIndicator;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 import trikita.log.Log;
 
 public class FileManager extends ThemeActivity implements View.OnClickListener,
         OnNavigationMenuEventListener {
 
-    private static final int DRAWER_ROOT      = R.id.nav_root;
-    private static final int DRAWER_SDCARD    = R.id.nav_sdcard;
-    private static final int DRAWER_DOWNLOADS = R.id.nav_downloads;
-    private static final int DRAWER_DCIM      = R.id.nav_dcim;
+    private int mDrawerRootId;
+    private int mDrawerSdcardId;
+
+    private List<Bookmark> mBookmarks = new ArrayList<>();
 
     private SublimeBaseMenuItem mDropboxItem;
     private SublimeBaseMenuItem mDriveItem;
@@ -70,6 +77,8 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private BaseBrowserFragment mFragment;
+
+    private Realm mBookmarkRealm;
 
     @Bind(R.id.base) View mView;
     @Bind(R.id.toolbar) Toolbar mToolbar;
@@ -95,6 +104,12 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        RealmConfiguration config = new RealmConfiguration.Builder(this)
+                .name("bookmark.realm")
+                .schemaVersion(1)
+                .build();
+        mBookmarkRealm = Realm.getInstance(config);
 
         SettingsProvider.get(this)
                 .registerOnSharedPreferenceChangeListener(mPreferenceListener);
@@ -195,31 +210,29 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     public boolean onNavigationMenuEvent(Event event, SublimeBaseMenuItem item) {
         if (event.equals(Event.CLICKED)) {
             int id = item.getItemId();
+            int fragmentId = TabItem.TAB_BROWSER;
             String path = null;
-            switch (id) {
-                case DRAWER_ROOT:
-                    path = "/";
-                    break;
-                case DRAWER_SDCARD:
-                    path = Environment.getExternalStorageDirectory().getAbsolutePath();
-                    break;
-                case DRAWER_DOWNLOADS:
-                    path = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-                    break;
-                case DRAWER_DCIM:
-                    path = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DCIM).getAbsolutePath();
-                    break;
+            if (id == mDrawerRootId) {
+                path = "/";
+
+            } else if (id == mDrawerSdcardId) {
+                path = Environment.getExternalStorageDirectory().getAbsolutePath();
+            } else {
+                for (Bookmark bookmark : mBookmarks) {
+                    if (bookmark.getMenuId() == id) {
+                        path = bookmark.getPath();
+                        fragmentId = bookmark.getFragmentId();
+                        break;
+                    }
+                }
             }
 
             if (!TextUtils.isEmpty(path)) {
-                if (mSectionsPagerAdapter.getCount() == 0) {
-                    mSectionsPagerAdapter.addTab(path);
+                if (mSectionsPagerAdapter.containsTabId(fragmentId)) {
+                    mSectionsPagerAdapter.moveToTabId(fragmentId, path);
                 } else {
-                    mFragment.filesChanged(path);
+                    mSectionsPagerAdapter.addTabId(fragmentId, path);
                 }
-                return true;
             }
             if (item.equals(mDropboxItem)) {
                 if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DROPBOX)) {
@@ -233,8 +246,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
                 } else {
                     mSectionsPagerAdapter.addTabId(TabItem.TAB_DRIVE);
                 }
+            } else if (item.equals(mAddCloudOption)) {
+                Log.d("Add cloud option");
             }
-            mDrawerLayout.closeDrawer(GravityCompat.START);
+            item.setEnabled(true);
+            mDrawerLayout.closeDrawers();
         }
         return true;
     }
@@ -303,37 +319,55 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             }
         });
         mDrawerToggle.syncState();
-        /*mDrawerAdapter = new DrawerAdapter(this);
-        mDrawer.setAdapter(mDrawerAdapter);
-        mDrawerAdapter.addItem(getString(R.string.root_title), "/");
-        mDrawerAdapter.addItem(getString(R.string.sdcard_title),
-                Environment.getExternalStorageDirectory().getPath());
-        mDrawerAdapter.addItem(getString(R.string.downloads_title),
-                Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_DOWNLOADS).getPath());
-        mDrawerAdapter.addItem(getString(R.string.dcim_title),
-                Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_DCIM).getPath());
-        getExternalSDCard();
-        mDrawer.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (mSectionsPagerAdapter.getCount() == 0) {
-                    mSectionsPagerAdapter.addTab(mDrawerAdapter.getPath(position));
-                } else {
-                    mFragment.filesChanged(mDrawerAdapter.getPath(position));
-                }
-                mDrawerLayout.closeDrawers();
-            }
-        });*/
 
-        addNavDrawerItems();
-        //mNavView.setNavigationItemSelectedListener(this);
+        recreateDrawerItems();
+
+        mNavView.getCurrentThemer().setCheckableItemTintList(getNavItemTintList());
 
         mNavView.setNavigationMenuEventListener(this);
+
+        mNavView.getHeaderView().findViewById(R.id.header_layout).setBackgroundColor(mPrimaryColor);
     }
 
-    private void addNavDrawerItems() {
+    private ColorStateList getNavItemTintList() {
+        int[][] states = new int[][] {
+                new int[] { android.R.attr.state_enabled}, // enabled
+                new int[] {-android.R.attr.state_enabled}, // disabled
+                new int[] {-android.R.attr.state_checked}, // unchecked
+                new int[] { android.R.attr.state_pressed},  // pressed
+                new int[] { android.R.attr.state_activated}
+        };
+
+        int[] colors = new int[] {
+                mAccentColor,
+                Color.TRANSPARENT,
+                Color.TRANSPARENT,
+                mAccentColor,
+                mAccentColor
+        };
+        return new ColorStateList(states, colors);
+    }
+
+    private void recreateDrawerItems() {
+        mNavView.getMenu().clear();
+
+        addBaseItems();
+
+        RealmResults<Bookmark> bookmarks = mBookmarkRealm.where(Bookmark.class).findAll();
+
+        SublimeGroup bookmarkGroup = mNavView.getMenu().addGroup(true, true, true, true,
+                SublimeGroup.CheckableBehavior.SINGLE);
+        mNavView.getMenu().addGroupHeaderItem(bookmarkGroup.getGroupId(), "Bookmarks", "", false);
+
+        if (bookmarks.size() == 0) {
+            addDefaultBookmarks();
+        }
+        for (Bookmark bookmark : bookmarks) {
+            mBookmarks.add(bookmark);
+            bookmark.setMenuId(mNavView.getMenu().addTextItem(bookmarkGroup.getGroupId(),
+                    bookmark.getName(), "", false).setShowsIconSpace(true).getItemId());
+        }
+
         SublimeGroup group = mNavView.getMenu().addGroup(true, true, true, true,
                 SublimeGroup.CheckableBehavior.SINGLE);
         mNavView.getMenu().addGroupHeaderItem(group.getGroupId(), "Cloud Storage", "", false);
@@ -343,7 +377,59 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
                 group.getGroupId(), "Add Cloud Storage", "", true);
         mAddCloudOption.setIcon(R.drawable.add);
 
+        // TODO Hide until ready
+        mAddCloudOption.setVisible(false);
+
         mNavView.getMenu().finalizeUpdates();
+    }
+
+    private void addDefaultBookmarks() {
+        mBookmarkRealm.beginTransaction();
+        Bookmark bookmark = new Bookmark();
+        bookmark.setName(getString(R.string.downloads_title));
+        bookmark.setPath(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
+        bookmark.setFragmentId(TabItem.TAB_BROWSER);
+        mBookmarkRealm.copyToRealm(bookmark);
+        bookmark = new Bookmark();
+        bookmark.setName(getString(R.string.dcim_title));
+        bookmark.setPath(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DCIM).getAbsolutePath());
+        bookmark.setFragmentId(TabItem.TAB_BROWSER);
+        mBookmarkRealm.copyToRealm(bookmark);
+        bookmark = new Bookmark();
+        bookmark.setName("Documents");
+        bookmark.setPath(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOCUMENTS).getAbsolutePath());
+        bookmark.setFragmentId(TabItem.TAB_BROWSER);
+        mBookmarkRealm.copyToRealm(bookmark);
+        mBookmarkRealm.commitTransaction();
+    }
+
+    private void addBaseItems() {
+        SublimeGroup base = mNavView.getMenu().addGroup(false, false, true, true,
+                SublimeGroup.CheckableBehavior.SINGLE);
+        SublimeBaseMenuItem rootItem = mNavView.getMenu().addTextItem(base.getGroupId(),
+                getString(R.string.root_title), "", false);
+        mDrawerRootId = rootItem.getItemId();
+        rootItem.setVisible(SettingsProvider.getBoolean(this,
+                SettingsProvider.KEY_ENABLE_ROOT, false)
+                && RootUtils.isRootAvailable());
+        mDrawerSdcardId = mNavView.getMenu().addTextItem(base.getGroupId(),
+                getString(R.string.sdcard_title), "", false).getItemId();
+
+        getExternalSDCard(base);
+    }
+
+    private void addBookmark() {
+        File file = new File(mFragment.getCurrentPath());
+        mBookmarkRealm.beginTransaction();
+        Bookmark bookmark = mBookmarkRealm.createObject(Bookmark.class);
+        bookmark.setName(file.getName());
+        bookmark.setPath(file.getAbsolutePath());
+        bookmark.setFragmentId(mSectionsPagerAdapter.getCurrentTabId());
+        mBookmarkRealm.commitTransaction();
+        recreateDrawerItems();
     }
 
     private void setupTabs() {
@@ -388,6 +474,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         mPageIndicator.setViewPager(mViewPager);
         mTabs.setViewPager(mViewPager);
 
+        mPageIndicator.setSelectedColor(mPrimaryColorDark);
+        mPageIndicator.setUnselectedColor(mPrimaryColor);
+        mTabs.setSelectedColor(mPrimaryColorDark);
+        mTabs.setUnselectedColor(mPrimaryColor);
+
         if (SettingsProvider.getBoolean(this, SettingsProvider.SMALL_INDICATOR, false)) {
             mTabs.setVisibility(View.GONE);
             mPageIndicator.setVisibility(View.VISIBLE);
@@ -420,11 +511,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     private void setupActionButtons() {
         buildActionButtons();
 
-        mActionMenu.setColorNormal(getAccentColor());
-        mActionMenu.setColorPressed(Utils.darkenColor(getAccentColor()));
+        mActionMenu.setColorNormal(getAccentColor(this));
+        mActionMenu.setColorPressed(Utils.darkenColor(getAccentColor(this)));
 
-        mPasteButton.setColorNormal(getAccentColor());
-        mPasteButton.setColorPressed(Utils.darkenColor(getAccentColor()));
+        mPasteButton.setColorNormal(getAccentColor(this));
+        mPasteButton.setColorPressed(Utils.darkenColor(getAccentColor(this)));
         mPasteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -458,8 +549,8 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
     private FloatingActionButton getButton(int icon, int title, int tag) {
         FloatingActionButton button = new FloatingActionButton(this);
-        button.setColorNormal(getAccentColor());
-        button.setColorPressed(Utils.darkenColor(getAccentColor()));
+        button.setColorNormal(getAccentColor(this));
+        button.setColorPressed(Utils.darkenColor(getAccentColor(this)));
         button.setIcon(icon);
         button.setTitle(getString(title));
         button.setTag(tag);
@@ -491,9 +582,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         }
     }
 
-    @SuppressWarnings("unused")
-    // TODO: update this for new nav drawer
-    public void getExternalSDCard() {
+    public void getExternalSDCard(SublimeGroup group) {
         String secondaryStorage = System.getenv("SECONDARY_STORAGE");
         Log.d(secondaryStorage);
         Set<String> sec = new HashSet<>();
@@ -505,12 +594,12 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
                     if (stor.toLowerCase().contains("usb")) {
                         File f = new File(stor);
                         if (f.exists() && f.isDirectory()) {
-                            //mDrawerAdapter.addItem("USB OTG", stor);
+                            mNavView.getMenu().addTextItem(group.getGroupId(), "USB OTG", "", false);
                         }
                     } else if (stor.toLowerCase().contains("sdcard1")) {
                         File f = new File(stor);
                         if (f.exists() && f.isDirectory()) {
-                            //mDrawerAdapter.addItem("External SD", stor);
+                            mNavView.getMenu().addTextItem(group.getGroupId(), "External SD", "", false);
                         }
                     }
                 }
@@ -558,6 +647,16 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             case R.id.close_tab:
                 mSectionsPagerAdapter.removeCurrentTab();
                 return true;
+            case R.id.add_bookmark:
+                /*new MaterialDialog.Builder(this).input("Bookmark Name",
+                        "Bookmark Name", false, new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                        Log.d(input);
+                    }
+                }).show();*/
+                addBookmark();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -594,19 +693,34 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         }
 
         public void moveToTabId(int id) {
+            moveToTabId(id, null);
+        }
+        public void moveToTabId(int id, String path) {
             for (TabItem tab : mItems) {
                 if (tab.id == id) {
                     mViewPager.setCurrentItem(mItems.indexOf(tab), true);
+                    if (path != null) {
+                        tab.fragment.filesChanged(path);
+                    }
+                    return;
                 }
             }
         }
 
         public void addTabId(int id) {
-            TabItem tab = new TabItem("/", id);
+            addTabId(id, "/");
+        }
+
+        public void addTabId(int id, String path) {
+            TabItem tab = new TabItem(path, id);
             mItems.add(tab);
             notifyDataSetChanged();
             mViewPager.setCurrentItem(mItems.indexOf(tab), true);
             FileManager.this.mTabs.notifyDataSetChanged();
+        }
+
+        public int getCurrentTabId() {
+            return mItems.get(mViewPager.getCurrentItem()).id;
         }
 
         public void removeCurrentTab() {

@@ -22,9 +22,9 @@ public class TabItem {
 
     private void setFragment() {
         if (id == TAB_DROPBOX) {
-            fragment = new DropboxFragment();
+            fragment = DropboxFragment.newInstance(path);
         } else if (id == TAB_DRIVE) {
-            fragment = new DriveFragment();
+            fragment = DriveFragment.newInstance(path);
         } else {
             fragment = BrowserFragment.newInstance(path);
         }

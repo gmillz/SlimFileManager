@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.support.annotation.ColorInt;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.View;
@@ -69,9 +70,14 @@ public class PageIndicator extends View implements ViewPager.OnPageChangeListene
         mViewPager.addOnPageChangeListener(this);
     }
 
-    public void setSelectedColor(int color) {
+    public void setSelectedColor(@ColorInt int color) {
         mPaint.setColor(color);
-        invalidate();
+        requestLayout();
+    }
+
+    public void setUnselectedColor(@ColorInt int color) {
+        setBackgroundColor(color);
+        requestLayout();
     }
 
     @Override

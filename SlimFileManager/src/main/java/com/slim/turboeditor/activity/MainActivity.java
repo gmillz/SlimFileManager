@@ -160,7 +160,6 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     @Override
     public void onResume() {
         super.onResume();
-        Log.d("onResume");
     }
 
     @Override
@@ -180,7 +179,6 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     @Override
     public void onPause() {
         super.onPause();
-        Log.d("onPause");
 
         if (mNewFileTask != null) {
             mNewFileTask.cancel(true);
@@ -271,7 +269,8 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
                 final Uri data = intent.getData();
                 final File newFile = new File(data.getPath());
 
-                // grantUriPermission(getPackageName(), data, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                // grantUriPermission(getPackageName(),
+                // data, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 // Check for the freshest data.
                 getContentResolver().takePersistableUriPermission(data,
                         (Intent.FLAG_GRANT_READ_URI_PERMISSION

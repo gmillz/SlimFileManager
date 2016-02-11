@@ -35,6 +35,7 @@
         android:layout_height="match_parent"
         android:scrollbars="vertical"
         android:fillViewport="true"
+        android:fastScrollEnabled="true"
         android:id="@id/vertical_scroll"
         android:background="@null">
 

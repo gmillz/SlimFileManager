@@ -11,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.ImageView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -101,6 +102,14 @@ public class DriveFragment extends BaseBrowserFragment {
 
         }
     };
+
+    public static BaseBrowserFragment newInstance(String path) {
+        BaseBrowserFragment fragment = new DriveFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_PATH, path);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     private void chooseAccount() {
         mActivity.startActivityForResult(
@@ -278,7 +287,9 @@ public class DriveFragment extends BaseBrowserFragment {
 
     @Override
     public String getCurrentPath() {
-        if (mCurrentPath.equals(getRootFolder())) {
+        if (TextUtils.isEmpty(mCurrentPath)) {
+            return getDefaultDirectory();
+        } else if (mCurrentPath.equals(getRootFolder())) {
             return DriveFiles.getRootId();
         } else {
             return mCurrentPath;

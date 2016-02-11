@@ -16,10 +16,10 @@ import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.StringRes;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -202,7 +202,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         mAdapter = new ViewAdapter();
 
         mProgress.setIndeterminate(true);
-        mRefreshLayout.setColorSchemeColors(ThemeActivity.getAccentColor());
+        mRefreshLayout.setColorSchemeColors(ThemeActivity.getAccentColor(mContext));
         mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -824,6 +824,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         @Bind(R.id.date) public TextView date;
         @Bind(R.id.info) public TextView info;
         @Bind(R.id.image) public ImageView icon;
+        @Bind(R.id.ripple_layout) MaterialRippleLayout rippleLayout;
 
         public BrowserViewHolder(View v) {
             super(v, mMultiSelector);
@@ -831,6 +832,8 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             v.setOnClickListener(this);
             v.setOnLongClickListener(this);
             v.setLongClickable(true);
+
+            rippleLayout.setRippleColor(ThemeActivity.getAccentColor(mContext));
         }
 
         public void onClick(View view) {
@@ -849,7 +852,8 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
 
         public boolean onLongClick(View view) {
             if (!mSupportsActionMode) return false;
-            mActivity.getToolbar().startActionMode(mMultiSelect);
+            //mActivity.getToolbar().startActionMode(mMultiSelect);
+            mActivity.startSupportActionMode(mMultiSelect);
             mMultiSelector.setSelectable(true);
             mMultiSelector.setSelected(this, true);
             return true;

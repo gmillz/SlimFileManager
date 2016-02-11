@@ -10,6 +10,8 @@ import com.slim.slimfilemanager.utils.Utils;
 import java.io.File;
 import java.util.ArrayList;
 
+import trikita.log.Log;
+
 public class DriveFile extends BaseFile {
 
     private com.google.api.services.drive.model.File mFile;
@@ -74,8 +76,13 @@ public class DriveFile extends BaseFile {
         new AsyncTask<Void, Void, File>() {
             @Override
             protected File doInBackground(Void... voids) {
-                File cacheFile = new File(Utils.getCacheDir() + mFile.getId()
+                File cacheFile = new File(Utils.getCacheDir() + "/" + mFile.getId()
                         + "/" + mFile.getTitle());
+                if (!cacheFile.getParentFile().exists()) {
+                    if (!cacheFile.getParentFile().mkdirs()) {
+                        Log.e("Unable to create directory - " + cacheFile.getParent());
+                    }
+                }
                 DriveUtils.downloadFile(mDrive, mFile, cacheFile);
                 return cacheFile;
             }
