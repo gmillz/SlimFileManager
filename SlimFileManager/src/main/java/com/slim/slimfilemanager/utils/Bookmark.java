@@ -1,7 +1,6 @@
 package com.slim.slimfilemanager.utils;
 
 import io.realm.RealmObject;
-import io.realm.annotations.Ignore;
 import io.realm.annotations.Required;
 
 public class Bookmark extends RealmObject {
@@ -14,7 +13,6 @@ public class Bookmark extends RealmObject {
 
     private int fragmentId;
 
-    @Ignore
     private int menuId;
 
     public Bookmark() {}

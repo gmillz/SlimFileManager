@@ -2,11 +2,12 @@ package com.slim.slimfilemanager.fragment;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.Manifest;
 import android.accounts.AccountManager;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -15,7 +16,7 @@ import android.text.TextUtils;
 import android.widget.ImageView;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
@@ -39,6 +40,8 @@ import com.slim.slimfilemanager.utils.file.DriveFile;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import trikita.log.Log;
 
 public class DriveFragment extends BaseBrowserFragment {
 
@@ -80,17 +83,17 @@ public class DriveFragment extends BaseBrowserFragment {
         public void onActivityResult(int requestCode, int resultCode, Intent data) {
             switch (requestCode) {
                 case REQUEST_GOOGLE_PLAY_SERVICES:
-                    if (requestCode != RESULT_OK) {
-                        isGooglePlayServicesAvailable();
-                    }
                     break;
                 case REQUEST_ACCOUNT_PICKER:
                     if (resultCode == RESULT_OK && data != null
                             && data.getExtras() != null) {
                         String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
                         if (accountName != null) {
+                            Log.d(accountName);
                             mCredential.setSelectedAccountName(accountName);
+                            initializeDrive();
                             mPrefs.edit().putString(PREF_ACCOUNT_NAME, accountName).apply();
+                            refreshFiles();
                         }
                     }
                     break;
@@ -98,6 +101,7 @@ public class DriveFragment extends BaseBrowserFragment {
                     if (resultCode != RESULT_OK) {
                         chooseAccount();
                     }
+                    break;
             }
 
         }
@@ -117,20 +121,18 @@ public class DriveFragment extends BaseBrowserFragment {
     }
 
     private boolean isGooglePlayServicesAvailable() {
-        final int connectionStatusCode =
-                GooglePlayServicesUtil.isGooglePlayServicesAvailable(mContext);
-        if (GooglePlayServicesUtil.isUserRecoverableError(connectionStatusCode)) {
-            showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode);
-        } else if (connectionStatusCode != ConnectionResult.SUCCESS) {
+        GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
+        int result = googleAPI.isGooglePlayServicesAvailable(mContext);
+        if(result != ConnectionResult.SUCCESS) {
+            if(googleAPI.isUserResolvableError(result)) {
+                googleAPI.getErrorDialog(mActivity, result,
+                        REQUEST_GOOGLE_PLAY_SERVICES).show();
+            }
+
             return false;
         }
-        return true;
-    }
 
-    private void showGooglePlayServicesAvailabilityErrorDialog(final int connectionStatusCode) {
-        Dialog dialog = GooglePlayServicesUtil.getErrorDialog(
-                connectionStatusCode, mActivity, REQUEST_GOOGLE_PLAY_SERVICES);
-        dialog.show();
+        return true;
     }
 
     @Override
@@ -144,20 +146,29 @@ public class DriveFragment extends BaseBrowserFragment {
                 .setBackOff(new ExponentialBackOff())
                 .setSelectedAccountName(mPrefs.getString(PREF_ACCOUNT_NAME, null));
 
-        HttpTransport transport = AndroidHttp.newCompatibleTransport();
-        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+        Log.d(mPrefs.getString(PREF_ACCOUNT_NAME, "NOPE"));
 
-        mDrive = new Drive.Builder(transport, jsonFactory, mCredential)
-                .setApplicationName(mActivity.getApplication().getPackageName())
-                .build();
+        if (mCredential.getSelectedAccountName() != null) {
+            initializeDrive();
+        } else {
+            chooseAccount();
+        }
 
-        if (!DriveFiles.isPopulated()) {
+        if (!DriveFiles.isPopulated() && mCredential.getSelectedAccountName() != null) {
             DriveFiles.populate(mDrive, mExecutor);
         }
 
         if (isGooglePlayServicesAvailable()) {
             onClickFile(ROOT_FOLDER);
         }
+    }
+
+    private void initializeDrive() {
+        HttpTransport transport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+        mDrive = new Drive.Builder(transport, jsonFactory, mCredential)
+                .setApplicationName(mActivity.getApplication().getPackageName())
+                .build();
     }
 
     @Override
@@ -207,13 +218,17 @@ public class DriveFragment extends BaseBrowserFragment {
 
     @Override
     public void refreshFiles() {
-        DriveFiles.populate(mDrive, mExecutor);
+        Log.d("refreshFiles");
+        if (mCredential.getSelectedAccountName() != null) {
+            DriveFiles.populate(mDrive, mExecutor);
+        }
         filesChanged(mCurrentPath);
     }
 
     @Override
     public void filesChanged(String path) {
         super.filesChanged(path);
+        Log.d("filesChanged");
         if (mCredential.getSelectedAccountName() == null) {
             chooseAccount();
         } else {
