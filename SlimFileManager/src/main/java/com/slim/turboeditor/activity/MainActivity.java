@@ -151,17 +151,6 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         SettingsProvider.get(this).registerOnSharedPreferenceChangeListener(mPreferenceListener);
     }
 
-
-    @Override
-    protected final void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);

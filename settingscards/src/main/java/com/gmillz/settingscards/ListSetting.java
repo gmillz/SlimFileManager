@@ -47,7 +47,10 @@ public class ListSetting extends SettingBase implements Application.ActivityLife
         ((Application) context.getApplicationContext()).registerActivityLifecycleCallbacks(this);
 
         String value = SettingsHandler.getString(context, mKey, (String) mDefault);
-        setSummary(mEntries[Arrays.asList(mValues).indexOf(value)]);
+        int index = Arrays.asList(mValues).indexOf(value);
+        if (index > -1) {
+            setSummary(mEntries[index]);
+        }
 
         v.setOnClickListener(new View.OnClickListener() {
             @Override

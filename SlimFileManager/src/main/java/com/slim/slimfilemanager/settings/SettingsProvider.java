@@ -65,6 +65,10 @@ public class SettingsProvider {
         return get(context).getString(key, defValue);
     }
 
+    public static void putString(Context context, String key, String value) {
+        put(context).putString(key, value).apply();
+    }
+
     public static boolean getBoolean(Context context, String key, boolean defValue) {
         return get(context).getBoolean(key, defValue);
     }
@@ -107,5 +111,9 @@ public class SettingsProvider {
             items.add(item.toString());
         }
         put(context).putString(key, TextUtils.join("‚‗‚", items)).apply();
+    }
+
+    public static void remove(Context context, String key) {
+        put(context).remove(key).apply();
     }
 }

@@ -117,7 +117,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
     @CallSuper
     public void filesChanged(String path) {
         mCurrentPath = path;
-        mActivity.setTabTitle(this, path);
+        if (mActivity != null) mActivity.setTabTitle(this, path);
     }
     public abstract String getDefaultDirectory();
     public abstract BaseFile getFile(int i);

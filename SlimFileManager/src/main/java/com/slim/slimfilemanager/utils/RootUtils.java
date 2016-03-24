@@ -139,7 +139,7 @@ public class RootUtils {
     public static boolean isRootAvailable() {
         CommandOutput output = runCommand("id");
         if (output != null && TextUtils.isEmpty(output.error) && output.exitCode == 0) {
-            return output.output.contains("uid=0");
+            return output.output != null && output.output.contains("uid=0");
         } else {
             output = runCommand("echo _TEST_");
             return output != null && output.output.contains("_TEST_");

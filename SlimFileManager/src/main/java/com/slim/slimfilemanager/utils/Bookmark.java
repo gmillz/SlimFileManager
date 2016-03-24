@@ -1,23 +1,23 @@
 package com.slim.slimfilemanager.utils;
 
-import io.realm.RealmObject;
-import io.realm.annotations.Ignore;
-import io.realm.annotations.Required;
+import android.database.Cursor;
 
-public class Bookmark extends RealmObject {
+public class Bookmark {
 
-    @Required
     private String name;
 
-    @Required
     private String path;
 
     private int fragmentId;
 
-    @Ignore
     private int menuId;
 
     public Bookmark() {}
+
+    public Bookmark(Cursor cursor) {
+        setName(cursor.getString(0));
+        setPath(cursor.getString(1));
+    }
 
     public String getName() {
         return name;
