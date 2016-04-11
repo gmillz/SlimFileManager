@@ -124,7 +124,6 @@ public class WiFiFileShare {
             if (action.equals(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION)) {
                 int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
                 if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-
                 }
             } else if (action.equals(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION)) {
                 requestPeers();
@@ -144,7 +143,6 @@ public class WiFiFileShare {
             try {
                 ServerSocket serverSocket = new ServerSocket(8888);
                 Socket client = serverSocket.accept();
-                client.get
             } catch (IOException e) {
                 e.printStackTrace();
             }
