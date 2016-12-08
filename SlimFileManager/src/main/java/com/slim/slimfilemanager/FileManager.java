@@ -52,6 +52,7 @@ import com.slim.slimfilemanager.utils.Utils;
 import com.slim.slimfilemanager.widget.PageIndicator;
 import com.slim.slimfilemanager.widget.TabItem;
 import com.slim.slimfilemanager.widget.TabPageIndicator;
+import com.slim.util.SDCardUtils;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -199,7 +200,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             int id = item.getItemId();
             int fragmentId = TabItem.TAB_BROWSER;
             String path = null;
@@ -208,6 +209,8 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
             } else if (id == SDCARD_ID) {
                 path = Environment.getExternalStorageDirectory().getAbsolutePath();
+            } else if (id == EXTERNALSD_ID) {
+                path = SDCardUtils.instance().getDirectory();
             } else {
                 for (Bookmark bookmark : mBookmarks) {
                     if (bookmark.getMenuId() == id) {
@@ -280,7 +283,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close);
 
-        mDrawerLayout.setDrawerListener(new DrawerLayout.DrawerListener() {
+        mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
             @Override
             public void onDrawerSlide(View drawerView, float slideOffset) {
                 if (Float.toString(slideOffset).contains("0.1")) {
@@ -337,9 +340,9 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             bookmarkGroup.add(0, bookmark.getMenuId(), 0, bookmark.getName()).setActionView(view);
         }
 
-        SubMenu cloud = mNavView.getMenu().addSubMenu("Cloud Storage");
-        cloud.add(0, DROPBOX_ID, 0, "Dropbox");
-        cloud.add(0, DRIVE_ID, 0, "Drive");
+        //SubMenu cloud = mNavView.getMenu().addSubMenu("Cloud Storage");
+        //cloud.add(0, DROPBOX_ID, 0, "Dropbox");
+        //cloud.add(0, DRIVE_ID, 0, "Drive");
     }
 
     private void addDefaultBookmarks() {
@@ -540,27 +543,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     public void getExternalSDCard() {
-        String secondaryStorage = System.getenv("SECONDARY_STORAGE");
-        Log.d(secondaryStorage);
-        Set<String> sec = new HashSet<>();
-        if (!TextUtils.isEmpty(secondaryStorage)) {
-            String[] secs = secondaryStorage.split(File.pathSeparator);
-            Collections.addAll(sec, secs);
-            if (!sec.isEmpty()) {
-                for (String stor : sec) {
-                    if (stor.toLowerCase().contains("usb")) {
-                        File f = new File(stor);
-                        if (f.exists() && f.isDirectory()) {
-                            mNavView.getMenu().add(0, EXTERNALSD_ID, 0, "USB OTG");
-                        }
-                    } else if (stor.toLowerCase().contains("sdcard1")) {
-                        File f = new File(stor);
-                        if (f.exists() && f.isDirectory()) {
-                            mNavView.getMenu().add(0, USB_OTG_ID, 0, "External SD");
-                        }
-                    }
-                }
-            }
+        SDCardUtils.initialize(this);
+        String extSD = SDCardUtils.instance().getDirectory();
+        Log.d(extSD);
+        if (!extSD.isEmpty()) {
+            mNavView.getMenu().add(0, EXTERNALSD_ID, 0, "External SD");
         }
     }
 
@@ -625,13 +612,13 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
         ArrayList<TabItem> mItems = new ArrayList<>();
 
-        public SectionsPagerAdapter(FragmentManager fm) {
+        SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
             addDefault();
             mItems = SettingsProvider.getTabList(FileManager.this, "tabs", mItems);
         }
 
-        public void addTab(String path) {
+        void addTab(String path) {
             mItems.add(new TabItem(path, TabItem.TAB_BROWSER));
             notifyDataSetChanged();
             FileManager.this.mTabs.notifyDataSetChanged();
@@ -642,7 +629,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             }
         }
 
-        public boolean containsTabId(int id) {
+        boolean containsTabId(int id) {
             for (TabItem tab : mItems) {
                 if (tab.id == id) {
                     return true;
@@ -651,10 +638,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             return false;
         }
 
-        public void moveToTabId(int id) {
+        void moveToTabId(int id) {
             moveToTabId(id, null);
         }
-        public void moveToTabId(int id, String path) {
+
+        void moveToTabId(int id, String path) {
             for (TabItem tab : mItems) {
                 if (tab.id == id) {
                     mViewPager.setCurrentItem(mItems.indexOf(tab), true);
@@ -666,11 +654,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             }
         }
 
-        public void addTabId(int id) {
+        void addTabId(int id) {
             addTabId(id, "/");
         }
 
-        public void addTabId(int id, String path) {
+        void addTabId(int id, String path) {
             TabItem tab = new TabItem(path, id);
             mItems.add(tab);
             notifyDataSetChanged();
@@ -678,11 +666,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             FileManager.this.mTabs.notifyDataSetChanged();
         }
 
-        public int getCurrentTabId() {
+        int getCurrentTabId() {
             return mItems.get(mViewPager.getCurrentItem()).id;
         }
 
-        public void removeCurrentTab() {
+        void removeCurrentTab() {
             int id = mCurrentPosition;
             mViewPager.setCurrentItem(id - 1, true);
             mItems.get(id).fragment.onDestroyView();
@@ -691,7 +679,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             FileManager.this.mTabs.notifyDataSetChanged();
         }
 
-        public void addDefault() {
+        void addDefault() {
             mItems.add(new TabItem(Environment.getExternalStorageDirectory().getAbsolutePath(),
                     TabItem.TAB_BROWSER));
             mItems.add(new TabItem("/", TabItem.TAB_BROWSER));
@@ -703,7 +691,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             return mItems.get(position).fragment;
         }
 
-        public ArrayList<TabItem> getItems() {
+        ArrayList<TabItem> getItems() {
             return mItems;
         }
 
