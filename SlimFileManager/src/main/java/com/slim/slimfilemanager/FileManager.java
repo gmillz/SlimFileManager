@@ -2,10 +2,7 @@ package com.slim.slimfilemanager;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import android.Manifest;
 import android.app.Activity;
@@ -546,7 +543,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         SDCardUtils.initialize(this);
         String extSD = SDCardUtils.instance().getDirectory();
         Log.d(extSD);
-        if (!extSD.isEmpty()) {
+        if (!TextUtils.isEmpty(extSD)) {
             mNavView.getMenu().add(0, EXTERNALSD_ID, 0, "External SD");
         }
     }

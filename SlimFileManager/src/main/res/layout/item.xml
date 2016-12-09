@@ -30,7 +30,6 @@
         android:contentDescription="@string/icon_description"/>
 
     <LinearLayout
-        android:id="@+id/detail_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerVertical="true"

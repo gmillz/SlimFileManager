@@ -31,19 +31,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".activity.PdfViewerActivity"
-            android:label="PDF Viewer">
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:mimeType="application/pdf" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".services.dropbox.DropboxLoginActivity"
             android:theme="@android:style/Theme.NoDisplay"
             android:label="Dropbox Login">

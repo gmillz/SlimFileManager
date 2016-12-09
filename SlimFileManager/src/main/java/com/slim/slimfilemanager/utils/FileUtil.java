@@ -1,6 +1,5 @@
 package com.slim.slimfilemanager.utils;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;

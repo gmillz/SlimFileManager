@@ -2,12 +2,10 @@ package com.slim.slimfilemanager.fragment;
 
 import static android.app.Activity.RESULT_OK;
 
-import android.Manifest;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;

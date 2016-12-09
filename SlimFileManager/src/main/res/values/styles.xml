@@ -31,10 +31,6 @@
         <item name="windowActionModeOverlay">true</item>
     </style>
 
-    <style name="menu_labels_style">
-        <item name="android:textColor">@android:color/black</item>
-    </style>
-
     <style name="Widget.TabPageIndicator" parent="android:Widget">
         <item name="android:gravity">center</item>
         <item name="android:background">?android:colorPrimary</item>
@@ -51,29 +47,6 @@
         <item name="android:typeface">monospace</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@android:color/white</item>
-    </style>
-
-    <style name="FormEntryInput">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:hint">@string/host</item>
-        <item name="android:inputType">textUri</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:fontFamily">sans-serif-light</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:layout_marginTop">4dp</item>
-    </style>
-
-    <style name="FormEntryLabel">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:textColor">?android:colorAccent</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:gravity">start</item>
-        <item name="android:textAlignment">viewStart</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:layout_marginLeft">4dp</item>
     </style>
 
     <style name="AppTheme.LabelStyle">

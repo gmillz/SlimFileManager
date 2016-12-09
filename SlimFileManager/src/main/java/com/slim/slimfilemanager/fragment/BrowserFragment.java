@@ -141,6 +141,7 @@ public class BrowserFragment extends BaseBrowserFragment {
                         @Override
                         public void onGetFile(File file) {
                             boolean passed;
+                            Log.d("TEST", "file=" + file.getAbsolutePath() + " : current=" + mCurrentPath);
                             if (move) {
                                 passed = FileUtil.moveFile(
                                         mContext, file.getAbsolutePath(), mCurrentPath);

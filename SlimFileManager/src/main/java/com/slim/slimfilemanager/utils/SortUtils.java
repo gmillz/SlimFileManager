@@ -3,11 +3,9 @@ package com.slim.slimfilemanager.utils;
 import android.content.Context;
 import android.text.TextUtils;
 
-import com.slim.slimfilemanager.fragment.BaseBrowserFragment;
 import com.slim.slimfilemanager.settings.SettingsProvider;
 import com.slim.slimfilemanager.utils.file.BaseFile;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

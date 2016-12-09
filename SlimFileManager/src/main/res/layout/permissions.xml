@@ -6,7 +6,6 @@
     android:padding="8dp">
 
     <LinearLayout
-        android:id="@+id/owner_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="5dp"
@@ -37,7 +36,6 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/group_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="5dp"
@@ -45,7 +43,6 @@
 
         <TextView
             android:labelFor="@+id/group"
-            android:id="@+id/permission_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start|center_vertical"

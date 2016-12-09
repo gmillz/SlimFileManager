@@ -3,20 +3,17 @@ package com.slim.slimfilemanager.services.drive;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
-import trikita.log.Log;
+
 import android.widget.ImageView;
 
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.slim.slimfilemanager.R;
-import com.slim.slimfilemanager.utils.Utils;
 import com.slim.slimfilemanager.utils.file.DriveFile;
 
 import java.io.IOException;

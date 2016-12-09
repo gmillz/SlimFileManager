@@ -2,21 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <Group android:checkableBehavior="single"
-        android:id="@+id/main">
+    <Group android:checkableBehavior="single">
         <Text
-            android:id="@+id/nav_sdcard"
             android:checked="true"
             android:title="@string/sdcard_title" />
-        <Text
-            android:id="@+id/nav_root"
-            android:title="@string/root_title" />
-        <Text
-            android:id="@+id/nav_downloads"
-            android:title="@string/downloads_title" />
-        <Text
-            android:id="@+id/nav_dcim"
-            android:title="@string/dcim_title" />
+        <Text android:title="@string/root_title" />
+        <Text android:title="@string/downloads_title" />
+        <Text android:title="@string/dcim_title" />
     </Group>
 
 </menu>

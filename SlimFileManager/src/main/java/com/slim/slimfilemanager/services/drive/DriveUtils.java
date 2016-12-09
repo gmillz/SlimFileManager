@@ -1,6 +1,5 @@
 package com.slim.slimfilemanager.services.drive;
 
-import android.os.FileObserver;
 import android.text.TextUtils;
 import trikita.log.Log;
 
