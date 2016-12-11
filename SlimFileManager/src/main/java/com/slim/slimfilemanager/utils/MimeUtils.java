@@ -9,46 +9,16 @@ import java.util.regex.Pattern;
 public class MimeUtils {
 
     public static final String ALL_MIME_TYPES = "*/*";
-
-    public static String getMimeType(String name) {
-        final String extension = FileUtil.getExtension(name);
-        String type = null;
-
-        if (extension != null && !extension.isEmpty()) {
-            final String extensionLowerCase = extension.toLowerCase(Locale
-                    .getDefault());
-            final MimeTypeMap mime = MimeTypeMap.getSingleton();
-            type = mime.getMimeTypeFromExtension(extensionLowerCase);
-            if (type == null) {
-                type = MIME_TYPES.get(extensionLowerCase);
-            }
-        }
-        return type;
-    }
-
-    private static boolean mimeTypeMatch(String mime, String input) {
-        return Pattern.matches(mime.replace("*", ".*"), input);
-    }
-
-    public static boolean isPicture(String name) {
-        final String mime = getMimeType(name);
-        return mime != null && mimeTypeMatch("image/*", mime);
-    }
-
-    public static boolean isVideo(String name) {
-        final String mime = getMimeType(name);
-        return mime != null && mimeTypeMatch("video/*", mime);
-    }
-
-    public static boolean isApp(String name) {
-        return name.endsWith(".apk");
-    }
-
-    public static boolean isTextFile(String name) {
-        final String mime = getMimeType(name);
-        return mime != null && mimeTypeMatch("text/*", mime);
-    }
-
+    public static final String[] MIME_CODE = {
+            "cs", "php", "js", "java", "py", "rb", "aspx", "cshtml", "vbhtml", "go", "c", "h", "cc", "cpp", "hh", "hpp", "pl", "pm", "t", "pod",
+            "m", "f", "for", "f90", "f95", "asp", "json", "wiki", "lua", "r"
+    };
+    public static final String[] MIME_SQL = {
+            "sql", "mdf", "ndf", "ldf"
+    };
+    public static final String[] MIME_MARKDOWN = {
+            "md", "mdown", "markdown",
+    };
     private static final HashMap<String, String> MIME_TYPES = new HashMap<>();
 
     static {
@@ -128,14 +98,42 @@ public class MimeUtils {
         MIME_TYPES.put("mkv", "video/x-matroska");
     }
 
-    public static final String[] MIME_CODE = {
-            "cs", "php", "js", "java", "py", "rb", "aspx", "cshtml", "vbhtml", "go", "c", "h", "cc", "cpp", "hh", "hpp", "pl", "pm", "t", "pod",
-            "m", "f", "for", "f90", "f95", "asp", "json", "wiki", "lua", "r"
-    };
-    public static final String[] MIME_SQL = {
-            "sql", "mdf", "ndf", "ldf"
-    };
-    public static final String[] MIME_MARKDOWN = {
-            "md", "mdown", "markdown",
-    };
+    public static String getMimeType(String name) {
+        final String extension = FileUtil.getExtension(name);
+        String type = null;
+
+        if (extension != null && !extension.isEmpty()) {
+            final String extensionLowerCase = extension.toLowerCase(Locale
+                    .getDefault());
+            final MimeTypeMap mime = MimeTypeMap.getSingleton();
+            type = mime.getMimeTypeFromExtension(extensionLowerCase);
+            if (type == null) {
+                type = MIME_TYPES.get(extensionLowerCase);
+            }
+        }
+        return type;
+    }
+
+    private static boolean mimeTypeMatch(String mime, String input) {
+        return Pattern.matches(mime.replace("*", ".*"), input);
+    }
+
+    public static boolean isPicture(String name) {
+        final String mime = getMimeType(name);
+        return mime != null && mimeTypeMatch("image/*", mime);
+    }
+
+    public static boolean isVideo(String name) {
+        final String mime = getMimeType(name);
+        return mime != null && mimeTypeMatch("video/*", mime);
+    }
+
+    public static boolean isApp(String name) {
+        return name.endsWith(".apk");
+    }
+
+    public static boolean isTextFile(String name) {
+        final String mime = getMimeType(name);
+        return mime != null && mimeTypeMatch("text/*", mime);
+    }
 }

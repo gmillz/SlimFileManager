@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-
 import android.widget.ImageView;
 
 import com.google.api.services.drive.Drive;
@@ -68,23 +67,8 @@ public class IconCache {
         return object;
     }
 
-    private static class ImageHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            Bundle bundle = msg.getData();
-            if (bundle != null) {
-                String key = bundle.getString("key");
-                if (!TextUtils.isEmpty(key)) {
-                    if (msg.obj != null) {
-                        setImage((ImageView) msg.obj, mCache.get(key));
-                    }
-                }
-            }
-        }
-    }
-
     public static void queueImage(final Context context, final Drive drive,
-            final File file, final ImageView view) {
+                                  final File file, final ImageView view) {
         mExecutor.submit(new Runnable() {
             @Override
             public void run() {
@@ -110,5 +94,20 @@ public class IconCache {
 
     public static void clearCache() {
         mCache.clear();
+    }
+
+    private static class ImageHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            Bundle bundle = msg.getData();
+            if (bundle != null) {
+                String key = bundle.getString("key");
+                if (!TextUtils.isEmpty(key)) {
+                    if (msg.obj != null) {
+                        setImage((ImageView) msg.obj, mCache.get(key));
+                    }
+                }
+            }
+        }
     }
 }

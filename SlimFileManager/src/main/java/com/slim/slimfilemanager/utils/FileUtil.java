@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.text.TextUtils;
-import trikita.log.Log;
 
 import com.slim.slimfilemanager.settings.SettingsProvider;
 
@@ -17,6 +16,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+
+import trikita.log.Log;
 
 public class FileUtil {
 
@@ -56,7 +57,7 @@ public class FileUtil {
             return true;
         } catch (IOException e) {
             return SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)
-                && RootUtils.isRootAvailable() && RootUtils.moveFile(source, destination);
+                    && RootUtils.isRootAvailable() && RootUtils.moveFile(source, destination);
         }
     }
 
@@ -74,13 +75,13 @@ public class FileUtil {
         String[] info = null;
 
         RootUtils.CommandOutput out;
-            if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)
-                    && RootUtils.isRootAvailable()) {
-                out = RootUtils.runCommand("ls -l " + file.getAbsolutePath());
-            } else {
-                out = runCommand("ls -l " + file.getAbsolutePath());
-            }
-            if (out == null) return null;
+        if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)
+                && RootUtils.isRootAvailable()) {
+            out = RootUtils.runCommand("ls -l " + file.getAbsolutePath());
+        } else {
+            out = runCommand("ls -l " + file.getAbsolutePath());
+        }
+        if (out == null) return null;
         if (TextUtils.isEmpty(out.error) && out.exitCode == 0) {
             info = getAttrs(out.output);
         }
@@ -139,7 +140,7 @@ public class FileUtil {
             if (output.exitCode != 0 || (!TextUtils.isEmpty(output.error))) {
                 Log.e("Root Error, cmd: " + cmd, "error: " + output.error);
             }
-        } catch (IOException|InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         return output;
@@ -195,7 +196,7 @@ public class FileUtil {
         return false;
     }
 
-    public static boolean mkdir (Context context, File dir) {
+    public static boolean mkdir(Context context, File dir) {
         return dir.mkdirs() || (SettingsProvider.getBoolean(context,
                 SettingsProvider.KEY_ENABLE_ROOT, false) && RootUtils.isRootAvailable()
                 && RootUtils.createFolder(dir));
@@ -216,7 +217,7 @@ public class FileUtil {
             } catch (IOException e) {
                 // ignore
             }
-        } else if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)){
+        } else if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)) {
             RootUtils.writeFile(file, content);
         }
     }
@@ -232,7 +233,7 @@ public class FileUtil {
     }
 
     public static void writeUri(Context context,
-                          Uri uri, String newContent, String encoding) throws IOException {
+                                Uri uri, String newContent, String encoding) throws IOException {
         ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "w");
         if (pfd != null) {
             FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());

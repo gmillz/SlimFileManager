@@ -12,7 +12,8 @@ public class Bookmark {
 
     private int menuId;
 
-    public Bookmark() {}
+    public Bookmark() {
+    }
 
     public Bookmark(Cursor cursor) {
         setName(cursor.getString(0));

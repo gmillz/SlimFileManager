@@ -22,6 +22,22 @@ public class ThemeActivity extends AppCompatActivity {
     protected int mPrimaryColor;
     protected int mPrimaryColorDark;
 
+    public static int getAccentColor(Context context) {
+        return SettingsProvider.getInt(context, KEY_ACCENT_COLOR,
+                getAttrColor(context, android.R.attr.colorAccent));
+    }
+
+    public static int getPrimaryColor(Context context) {
+        return SettingsProvider.getInt(context, KEY_PRIMARY_COLOR,
+                getAttrColor(context, android.R.attr.colorPrimary));
+    }
+
+    public static int getAttrColor(Context context, @AttrRes int attr) {
+        TypedValue value = new TypedValue();
+        context.getTheme().resolveAttribute(attr, value, true);
+        return value.data;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         mCurrentTheme = SettingsProvider.getInt(this,
@@ -83,21 +99,5 @@ public class ThemeActivity extends AppCompatActivity {
 
     private void setStatusBar(int color) {
         getWindow().setStatusBarColor(CircleView.shiftColorDown(color));
-    }
-
-    public static int getAccentColor(Context context) {
-        return SettingsProvider.getInt(context, KEY_ACCENT_COLOR,
-                getAttrColor(context, android.R.attr.colorAccent));
-    }
-
-    public static int getPrimaryColor(Context context) {
-        return SettingsProvider.getInt(context, KEY_PRIMARY_COLOR,
-                getAttrColor(context, android.R.attr.colorPrimary));
-    }
-
-    public static int getAttrColor(Context context, @AttrRes int attr) {
-        TypedValue value = new TypedValue();
-        context.getTheme().resolveAttribute(attr, value, true);
-        return value.data;
     }
 }

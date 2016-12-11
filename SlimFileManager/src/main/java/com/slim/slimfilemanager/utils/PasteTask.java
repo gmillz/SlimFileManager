@@ -1,7 +1,5 @@
 package com.slim.slimfilemanager.utils;
 
-import static butterknife.ButterKnife.findById;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.view.View;
@@ -17,26 +15,19 @@ import java.util.HashMap;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static butterknife.ButterKnife.findById;
+
 public class PasteTask {
 
     Context mContext;
     ArrayList<BaseFile> mFiles = new ArrayList<>();
     boolean mMove;
     String mLocation;
-
-    private Callback mCallback;
-
-    public interface Callback {
-        void pasteFiles(ArrayList<BaseFile> paths, boolean move);
-    }
-
     BaseFile mCurrent;
-
     AlertDialog mDialog;
-
     HashMap<File, BaseFile> mExistingFiles = new HashMap<>();
     ArrayList<BaseFile> mProcess = new ArrayList<>();
-
+    private Callback mCallback;
     public PasteTask(Context context,
                      boolean shouldDelete, String location, Callback callback) {
         mContext = context;
@@ -83,7 +74,7 @@ public class PasteTask {
         }
     }
 
-    @OnClick({ R.id.skip, R.id.skip_all, R.id.replace, R.id.replace_all, R.id.cancel})
+    @OnClick({R.id.skip, R.id.skip_all, R.id.replace, R.id.replace_all, R.id.cancel})
     public void onClick(View view) {
         if (mDialog != null) mDialog.dismiss();
 
@@ -102,6 +93,10 @@ public class PasteTask {
             mProcess.clear();
         }
         processFiles();
+    }
+
+    public interface Callback {
+        void pasteFiles(ArrayList<BaseFile> paths, boolean move);
     }
 
     public static final class SelectedFiles {

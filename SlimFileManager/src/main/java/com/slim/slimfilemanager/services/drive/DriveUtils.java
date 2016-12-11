@@ -1,7 +1,6 @@
 package com.slim.slimfilemanager.services.drive;
 
 import android.text.TextUtils;
-import trikita.log.Log;
 
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.GenericUrl;
@@ -18,6 +17,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+
+import trikita.log.Log;
 
 public class DriveUtils {
 
@@ -43,7 +44,7 @@ public class DriveUtils {
 
     public static java.io.File downloadFileToCache(Drive service, File file) {
         final java.io.File cacheFile = new java.io.File(Utils.getCacheDir() + file.getId()
-            + "/" + file.getTitle());
+                + "/" + file.getTitle());
         if (cacheFile.exists()) {
             if (!cacheFile.delete()) {
                 Log.e("TEMP", "Unable to delete " + cacheFile.getAbsolutePath());
@@ -149,7 +150,7 @@ public class DriveUtils {
     }
 
     public static File insertFile(Drive service, String title, String description,
-                                   String parentId, String mimeType, String filename) {
+                                  String parentId, String mimeType, String filename) {
         // File's metadata.
         File body = new File();
         body.setTitle(title);

@@ -27,9 +27,8 @@ import trikita.log.Log;
 public class SettingsActivity extends ThemeActivity implements
         SettingBase.OnSettingChanged, ColorChooserDialog.ColorCallback {
 
-    SettingsContainer mSettings;
-
     private static String mKey = "";
+    SettingsContainer mSettings;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -84,11 +83,11 @@ public class SettingsActivity extends ThemeActivity implements
                         .setDefault(true));
         category = new SettingsCategory(R.string.theme_options);
 
-        String[] entries = new String[] {
+        String[] entries = new String[]{
                 getString(R.string.light),
                 getString(R.string.dark)
         };
-        String[] values = new String[] {
+        String[] values = new String[]{
                 Integer.toString(R.style.AppTheme),
                 Integer.toString(R.style.AppTheme_Dark)
         };

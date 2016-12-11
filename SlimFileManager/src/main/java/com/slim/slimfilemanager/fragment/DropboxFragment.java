@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.FileObserver;
 import android.text.TextUtils;
-import trikita.log.Log;
 import android.widget.ImageView;
 
 import com.dropbox.client2.DropboxAPI;
@@ -32,6 +31,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import trikita.log.Log;
 
 
 public class DropboxFragment extends BaseBrowserFragment {
@@ -134,7 +135,7 @@ public class DropboxFragment extends BaseBrowserFragment {
                         hideProgressDialog();
                         fileClicked(cacheFile);
                     }
-                } catch (IOException|DropboxException e) {
+                } catch (IOException | DropboxException e) {
                     // ignore
                 }
             }
@@ -187,6 +188,7 @@ public class DropboxFragment extends BaseBrowserFragment {
             protected void onPreExecute() {
                 showProgressDialog(R.string.delete_dialog_title, true);
             }
+
             protected Void doInBackground(Void... v) {
                 showProgressDialog(R.string.delete_dialog_title, true);
                 try {
@@ -197,6 +199,7 @@ public class DropboxFragment extends BaseBrowserFragment {
                 hideProgressDialog();
                 return null;
             }
+
             protected void onPostExecute(Void v) {
                 hideProgressDialog();
             }
@@ -218,7 +221,7 @@ public class DropboxFragment extends BaseBrowserFragment {
                         mAPI.delete(entry.path);
                         mAPI.putFile(entry.path, inputStream, file.length(), null, null);
                         inputStream.close();
-                    } catch (IOException|DropboxException e) {
+                    } catch (IOException | DropboxException e) {
                         // ignore
                     }
                 }
@@ -252,7 +255,7 @@ public class DropboxFragment extends BaseBrowserFragment {
                                                 public void updateProgress(int progress) {
                                                     DropboxFragment.this.updateProgress(progress);
                                                 }
-                                    });
+                                            });
                                 }
                             });
                         }
@@ -305,7 +308,7 @@ public class DropboxFragment extends BaseBrowserFragment {
                             DropboxUtils.uploadFile(mAPI, path, tempFile, null);
                         }
                     }
-                } catch (DropboxException|IOException e) {
+                } catch (DropboxException | IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -329,6 +332,6 @@ public class DropboxFragment extends BaseBrowserFragment {
     @Override
     public void getIconForFile(ImageView imageView, int position) {
         IconCache.getIconForFile(mContext,
-                mAPI, ((DropboxAPI.Entry)mFiles.get(position).getRealFile()), imageView);
+                mAPI, ((DropboxAPI.Entry) mFiles.get(position).getRealFile()), imageView);
     }
 }

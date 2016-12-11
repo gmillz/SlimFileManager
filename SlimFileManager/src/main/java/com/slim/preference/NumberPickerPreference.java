@@ -1,7 +1,5 @@
 package com.slim.preference;
 
-import static butterknife.ButterKnife.findById;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.preference.DialogPreference;
@@ -11,6 +9,8 @@ import android.view.View;
 import android.widget.NumberPicker;
 
 import com.slim.slimfilemanager.R;
+
+import static butterknife.ButterKnife.findById;
 
 public class NumberPickerPreference extends DialogPreference {
     private int mMin, mMax, mDefault;

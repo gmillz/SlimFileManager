@@ -10,10 +10,6 @@ import java.io.IOException;
 
 public class DropboxUtils {
 
-    public static abstract class Callback {
-        public void updateProgress(int progress) {}
-    }
-
     public static void uploadFile(DropboxAPI service,
                                   String dropboxPath, File file, final Callback callback) {
         try {
@@ -44,6 +40,11 @@ public class DropboxUtils {
             }
         } catch (IOException | DropboxException e) {
             // ignore
+        }
+    }
+
+    public static abstract class Callback {
+        public void updateProgress(int progress) {
         }
     }
 }

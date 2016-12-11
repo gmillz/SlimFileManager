@@ -6,18 +6,24 @@ import com.slim.slimfilemanager.fragment.DriveFragment;
 import com.slim.slimfilemanager.fragment.DropboxFragment;
 
 public class TabItem {
+    public static final int TAB_BROWSER = 1001;
+    public static final int TAB_DROPBOX = 1002;
+    public static final int TAB_DRIVE = 1003;
     public BaseBrowserFragment fragment;
     public String path;
     public int id;
-
-    public static final int TAB_BROWSER = 1001;
-    public static final int TAB_DROPBOX = 1002;
-    public static final int TAB_DRIVE   = 1003;
 
     public TabItem(String p, int id) {
         path = p;
         this.id = id;
         setFragment();
+    }
+
+    public static TabItem fromString(String s) {
+        String[] fields = s.split("<.>");
+        String path = fields[0];
+        int id = Integer.parseInt(fields[1]);
+        return new TabItem(path, id);
     }
 
     private void setFragment() {
@@ -28,13 +34,6 @@ public class TabItem {
         } else {
             fragment = BrowserFragment.newInstance(path);
         }
-    }
-
-    public static TabItem fromString(String s) {
-        String[] fields = s.split("<.>");
-        String path = fields[0];
-        int id = Integer.parseInt(fields[1]);
-        return new TabItem(path, id);
     }
 
     public String toString() {

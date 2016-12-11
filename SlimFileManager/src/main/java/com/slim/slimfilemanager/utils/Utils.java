@@ -67,8 +67,8 @@ public class Utils {
             context.startActivity(i);
         } catch (Exception e) {
             //Toast.makeText(context,
-              //      context.getString(R.string.cantopenfile) + e.getMessage(),
-                //    Toast.LENGTH_SHORT).show();
+            //      context.getString(R.string.cantopenfile) + e.getMessage(),
+            //    Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -107,7 +107,7 @@ public class Utils {
         int b = Color.blue(color);
         int g = Color.green(color);
 
-        return Color.rgb((int)(r*.9), (int)(g*.9), (int)(b*.9));
+        return Color.rgb((int) (r * .9), (int) (g * .9), (int) (b * .9));
     }
 
     public static String convertToARGB(int color) {

@@ -9,8 +9,8 @@ android {
         applicationId "com.slim.slimfilemanager"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 02
-        versionName "0.2beta"
+        versionCode 3
+        versionName "0.2.1beta"
         archivesBaseName = "SlimFileManager"
         multiDexEnabled true
     }

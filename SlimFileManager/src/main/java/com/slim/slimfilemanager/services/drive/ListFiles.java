@@ -15,10 +15,6 @@ public class ListFiles extends AsyncTask<Void, Void, Void> {
 
     private ArrayList<File> mFiles = new ArrayList<>();
 
-    public interface Callback {
-        void filesList(ArrayList<File> files);
-    }
-
     public ListFiles(Drive drive, String path, Callback callback) {
         mDrive = drive;
         mPath = path;
@@ -46,5 +42,9 @@ public class ListFiles extends AsyncTask<Void, Void, Void> {
         if (mCallback != null) {
             mCallback.filesList(mFiles);
         }
+    }
+
+    public interface Callback {
+        void filesList(ArrayList<File> files);
     }
 }

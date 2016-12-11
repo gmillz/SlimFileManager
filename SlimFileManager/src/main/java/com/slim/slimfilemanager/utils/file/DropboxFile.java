@@ -86,7 +86,7 @@ public class DropboxFile extends BaseFile {
                     dis.close();
                     fos.close();
                     return cacheFile;
-                } catch (DropboxException|IOException e) {
+                } catch (DropboxException | IOException e) {
                     e.printStackTrace();
                 }
                 return null;

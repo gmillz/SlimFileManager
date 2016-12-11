@@ -1,4 +1,3 @@
-
 package com.getbase.floatingactionbutton;
 
 import android.animation.Animator;
@@ -39,20 +38,19 @@ public class FloatingActionsMenu extends ViewGroup {
     private static final int ANIMATION_DURATION = 300;
     private static final float COLLAPSED_PLUS_ROTATION = 0f;
     private static final float EXPANDED_PLUS_ROTATION = 90f + 45f;
-
+    private static Interpolator sExpandInterpolator = new OvershootInterpolator();
+    private static Interpolator sCollapseInterpolator = new DecelerateInterpolator(3f);
+    private static Interpolator sAlphaExpandInterpolator = new DecelerateInterpolator();
     private int mAddButtonPlusColor;
     private int mAddButtonColorNormal;
     private int mAddButtonColorPressed;
     private int mAddButtonSize;
     private boolean mAddButtonStrokeVisible;
     private int mExpandDirection;
-
     private int mButtonSpacing;
     private int mLabelsMargin;
     private int mLabelsVerticalOffset;
-
     private boolean mExpanded;
-
     private AnimatorSet mExpandAnimation = new AnimatorSet().setDuration(ANIMATION_DURATION);
     private AnimatorSet mCollapseAnimation = new AnimatorSet().setDuration(ANIMATION_DURATION);
     private AddFloatingActionButton mAddButton;
@@ -62,15 +60,8 @@ public class FloatingActionsMenu extends ViewGroup {
     private int mLabelsStyle;
     private int mLabelsPosition;
     private int mButtonsCount;
-
     private TouchDelegateGroup mTouchDelegateGroup;
-
     private OnFloatingActionsMenuUpdateListener mListener;
-
-    public interface OnFloatingActionsMenuUpdateListener {
-        void onMenuExpanded();
-        void onMenuCollapsed();
-    }
 
     public FloatingActionsMenu(Context context) {
         this(context, null);
@@ -118,33 +109,6 @@ public class FloatingActionsMenu extends ViewGroup {
 
     private boolean expandsHorizontally() {
         return mExpandDirection == EXPAND_LEFT || mExpandDirection == EXPAND_RIGHT;
-    }
-
-    private static class RotatingDrawable extends LayerDrawable {
-        public RotatingDrawable(Drawable drawable) {
-            super(new Drawable[] { drawable });
-        }
-
-        private float mRotation;
-
-        @SuppressWarnings("UnusedDeclaration")
-        public float getRotation() {
-            return mRotation;
-        }
-
-        @SuppressWarnings("UnusedDeclaration")
-        public void setRotation(float rotation) {
-            mRotation = rotation;
-            invalidateSelf();
-        }
-
-        @Override
-        public void draw(Canvas canvas) {
-            canvas.save();
-            canvas.rotate(mRotation, getBounds().centerX(), getBounds().centerY());
-            super.draw(canvas);
-            canvas.restore();
-        }
     }
 
     private void createAddButton(Context context) {
@@ -436,80 +400,6 @@ public class FloatingActionsMenu extends ViewGroup {
         return super.checkLayoutParams(p);
     }
 
-    private static Interpolator sExpandInterpolator = new OvershootInterpolator();
-    private static Interpolator sCollapseInterpolator = new DecelerateInterpolator(3f);
-    private static Interpolator sAlphaExpandInterpolator = new DecelerateInterpolator();
-
-    private class LayoutParams extends ViewGroup.LayoutParams {
-
-        private ObjectAnimator mExpandDir = new ObjectAnimator();
-        private ObjectAnimator mExpandAlpha = new ObjectAnimator();
-        private ObjectAnimator mCollapseDir = new ObjectAnimator();
-        private ObjectAnimator mCollapseAlpha = new ObjectAnimator();
-        private boolean animationsSetToPlay;
-
-        public LayoutParams(ViewGroup.LayoutParams source) {
-            super(source);
-
-            mExpandDir.setInterpolator(sExpandInterpolator);
-            mExpandAlpha.setInterpolator(sAlphaExpandInterpolator);
-            mCollapseDir.setInterpolator(sCollapseInterpolator);
-            mCollapseAlpha.setInterpolator(sCollapseInterpolator);
-
-            mCollapseAlpha.setProperty(View.ALPHA);
-            mCollapseAlpha.setFloatValues(1f, 0f);
-
-            mExpandAlpha.setProperty(View.ALPHA);
-            mExpandAlpha.setFloatValues(0f, 1f);
-
-            switch (mExpandDirection) {
-                case EXPAND_UP:
-                case EXPAND_DOWN:
-                    mCollapseDir.setProperty(View.TRANSLATION_Y);
-                    mExpandDir.setProperty(View.TRANSLATION_Y);
-                    break;
-                case EXPAND_LEFT:
-                case EXPAND_RIGHT:
-                    mCollapseDir.setProperty(View.TRANSLATION_X);
-                    mExpandDir.setProperty(View.TRANSLATION_X);
-                    break;
-            }
-        }
-
-        public void setAnimationsTarget(View view) {
-            mCollapseAlpha.setTarget(view);
-            mCollapseDir.setTarget(view);
-            mExpandAlpha.setTarget(view);
-            mExpandDir.setTarget(view);
-
-            // Now that the animations have targets, set them to be played
-            if (!animationsSetToPlay) {
-                addLayerTypeListener(mExpandDir, view);
-                addLayerTypeListener(mCollapseDir, view);
-
-                mCollapseAnimation.play(mCollapseAlpha);
-                mCollapseAnimation.play(mCollapseDir);
-                mExpandAnimation.play(mExpandAlpha);
-                mExpandAnimation.play(mExpandDir);
-                animationsSetToPlay = true;
-            }
-        }
-
-        private void addLayerTypeListener(Animator animator, final View view) {
-            animator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    view.setLayerType(LAYER_TYPE_NONE, null);
-                }
-
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    view.setLayerType(LAYER_TYPE_HARDWARE, null);
-                }
-            });
-        }
-    }
-
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
@@ -621,7 +511,52 @@ public class FloatingActionsMenu extends ViewGroup {
         }
     }
 
+    public interface OnFloatingActionsMenuUpdateListener {
+        void onMenuExpanded();
+
+        void onMenuCollapsed();
+    }
+
+    private static class RotatingDrawable extends LayerDrawable {
+        private float mRotation;
+
+        public RotatingDrawable(Drawable drawable) {
+            super(new Drawable[]{drawable});
+        }
+
+        @SuppressWarnings("UnusedDeclaration")
+        public float getRotation() {
+            return mRotation;
+        }
+
+        @SuppressWarnings("UnusedDeclaration")
+        public void setRotation(float rotation) {
+            mRotation = rotation;
+            invalidateSelf();
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            canvas.save();
+            canvas.rotate(mRotation, getBounds().centerX(), getBounds().centerY());
+            super.draw(canvas);
+            canvas.restore();
+        }
+    }
+
     public static class SavedState extends BaseSavedState {
+        public static final Creator<SavedState> CREATOR = new Creator<SavedState>() {
+
+            @Override
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            @Override
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
         public boolean mExpanded;
 
         public SavedState(Parcelable parcel) {
@@ -638,18 +573,75 @@ public class FloatingActionsMenu extends ViewGroup {
             super.writeToParcel(out, flags);
             out.writeInt(mExpanded ? 1 : 0);
         }
+    }
 
-        public static final Creator<SavedState> CREATOR = new Creator<SavedState>() {
+    private class LayoutParams extends ViewGroup.LayoutParams {
 
-            @Override
-            public SavedState createFromParcel(Parcel in) {
-                return new SavedState(in);
+        private ObjectAnimator mExpandDir = new ObjectAnimator();
+        private ObjectAnimator mExpandAlpha = new ObjectAnimator();
+        private ObjectAnimator mCollapseDir = new ObjectAnimator();
+        private ObjectAnimator mCollapseAlpha = new ObjectAnimator();
+        private boolean animationsSetToPlay;
+
+        public LayoutParams(ViewGroup.LayoutParams source) {
+            super(source);
+
+            mExpandDir.setInterpolator(sExpandInterpolator);
+            mExpandAlpha.setInterpolator(sAlphaExpandInterpolator);
+            mCollapseDir.setInterpolator(sCollapseInterpolator);
+            mCollapseAlpha.setInterpolator(sCollapseInterpolator);
+
+            mCollapseAlpha.setProperty(View.ALPHA);
+            mCollapseAlpha.setFloatValues(1f, 0f);
+
+            mExpandAlpha.setProperty(View.ALPHA);
+            mExpandAlpha.setFloatValues(0f, 1f);
+
+            switch (mExpandDirection) {
+                case EXPAND_UP:
+                case EXPAND_DOWN:
+                    mCollapseDir.setProperty(View.TRANSLATION_Y);
+                    mExpandDir.setProperty(View.TRANSLATION_Y);
+                    break;
+                case EXPAND_LEFT:
+                case EXPAND_RIGHT:
+                    mCollapseDir.setProperty(View.TRANSLATION_X);
+                    mExpandDir.setProperty(View.TRANSLATION_X);
+                    break;
             }
+        }
 
-            @Override
-            public SavedState[] newArray(int size) {
-                return new SavedState[size];
+        public void setAnimationsTarget(View view) {
+            mCollapseAlpha.setTarget(view);
+            mCollapseDir.setTarget(view);
+            mExpandAlpha.setTarget(view);
+            mExpandDir.setTarget(view);
+
+            // Now that the animations have targets, set them to be played
+            if (!animationsSetToPlay) {
+                addLayerTypeListener(mExpandDir, view);
+                addLayerTypeListener(mCollapseDir, view);
+
+                mCollapseAnimation.play(mCollapseAlpha);
+                mCollapseAnimation.play(mCollapseDir);
+                mExpandAnimation.play(mExpandAlpha);
+                mExpandAnimation.play(mExpandDir);
+                animationsSetToPlay = true;
             }
-        };
+        }
+
+        private void addLayerTypeListener(Animator animator, final View view) {
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    view.setLayerType(LAYER_TYPE_NONE, null);
+                }
+
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    view.setLayerType(LAYER_TYPE_HARDWARE, null);
+                }
+            });
+        }
     }
 }

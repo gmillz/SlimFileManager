@@ -70,21 +70,6 @@ public class IconCache {
         return object;
     }
 
-    private static class ImageHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            Bundle bundle = msg.getData();
-            if (bundle != null) {
-                String key = bundle.getString("key");
-                if (!TextUtils.isEmpty(key)) {
-                    if (msg.obj != null) {
-                        setImage((ImageView) msg.obj, mCache.get(key));
-                    }
-                }
-            }
-        }
-    }
-
     public static void queueImage(final Context context, final DropboxAPI api,
                                   final DropboxAPI.Entry entry, final ImageView view) {
         mExecutor.submit(new Runnable() {
@@ -112,5 +97,20 @@ public class IconCache {
 
     public static void clearCache() {
         mCache.clear();
+    }
+
+    private static class ImageHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            Bundle bundle = msg.getData();
+            if (bundle != null) {
+                String key = bundle.getString("key");
+                if (!TextUtils.isEmpty(key)) {
+                    if (msg.obj != null) {
+                        setImage((ImageView) msg.obj, mCache.get(key));
+                    }
+                }
+            }
+        }
     }
 }

@@ -19,8 +19,6 @@
 
 package com.slim.turboeditor.views;
 
-import static butterknife.ButterKnife.findById;
-
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
@@ -35,6 +33,8 @@ import com.slim.slimfilemanager.R;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import static butterknife.ButterKnife.findById;
 
 /**
  * Helper class for showing fragment dialogs.
@@ -140,7 +140,6 @@ public class DialogHelper {
          * This is nice to display simple layout without scrollable elements such as
          * {@link android.widget.ListView} or any similar. Use {@link #createSkeletonView()}
          * for them.
-         *
          */
         public View createCommonView() {
 

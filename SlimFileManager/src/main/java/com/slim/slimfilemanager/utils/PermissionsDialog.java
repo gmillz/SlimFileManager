@@ -23,21 +23,29 @@ public class PermissionsDialog {
 
     Permissions mOriginalPermissions;
     Permissions mPermissions;
-
+    @Bind(R.id.owner)
+    EditText mOwner;
+    @Bind(R.id.group)
+    EditText mGroup;
+    @Bind(R.id.uread)
+    CheckBox uRead;
+    @Bind(R.id.uwrite)
+    CheckBox uWrite;
+    @Bind(R.id.uexecute)
+    CheckBox uExecute;
+    @Bind(R.id.gread)
+    CheckBox gRead;
+    @Bind(R.id.gwrite)
+    CheckBox gWrite;
+    @Bind(R.id.gexecute)
+    CheckBox gExecute;
+    @Bind(R.id.oread)
+    CheckBox oRead;
+    @Bind(R.id.owrite)
+    CheckBox oWrite;
+    @Bind(R.id.oexecute)
+    CheckBox oExecute;
     private View mView;
-
-    @Bind(R.id.owner) EditText mOwner;
-    @Bind(R.id.group) EditText mGroup;
-    @Bind(R.id.uread) CheckBox uRead;
-    @Bind(R.id.uwrite) CheckBox uWrite;
-    @Bind(R.id.uexecute) CheckBox uExecute;
-    @Bind(R.id.gread) CheckBox gRead;
-    @Bind(R.id.gwrite) CheckBox gWrite;
-    @Bind(R.id.gexecute) CheckBox gExecute;
-    @Bind(R.id.oread) CheckBox oRead;
-    @Bind(R.id.owrite) CheckBox oWrite;
-    @Bind(R.id.oexecute) CheckBox oExecute;
-
     private File mFile;
     private Context mContext;
 
@@ -118,7 +126,7 @@ public class PermissionsDialog {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (mPermissions.equals(mOriginalPermissions))
-                FileUtil.applyPermissions(mContext, mFile, mPermissions);
+                    FileUtil.applyPermissions(mContext, mFile, mPermissions);
                 FileUtil.changeGroupOwner(mContext, mFile, mPermissions.owner, mPermissions.group);
                 dialog.dismiss();
             }

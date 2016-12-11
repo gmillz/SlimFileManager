@@ -47,12 +47,12 @@ public class ArchiveUtils {
         try {
             zipstream = new ZipInputStream(new FileInputStream(zipFile));
 
-            while((entry = zipstream.getNextEntry()) != null) {
+            while ((entry = zipstream.getNextEntry()) != null) {
                 String buildDir = location;
                 String[] dirs = entry.getName().split("/");
 
-                if(dirs.length > 0) {
-                    for(int i = 0; i < dirs.length - 1; i++) {
+                if (dirs.length > 0) {
+                    for (int i = 0; i < dirs.length - 1; i++) {
                         buildDir += dirs[i] + "/";
                         if (!new File(buildDir).mkdirs()) return null;
                     }
@@ -61,7 +61,7 @@ public class ArchiveUtils {
                 int read;
                 FileOutputStream out = new FileOutputStream(
                         location + entry.getName());
-                while((read = zipstream.read(data, 0, BUFFER)) != -1)
+                while ((read = zipstream.read(data, 0, BUFFER)) != -1)
                     out.write(data, 0, read);
 
                 zipstream.closeEntry();
@@ -112,7 +112,7 @@ public class ArchiveUtils {
     }
 
     private static void zipFolder(ZipOutputStream out, File folder,
-                                     int basePathLength) throws IOException {
+                                  int basePathLength) throws IOException {
         File[] fileList = folder.listFiles();
 
         for (File file : fileList) {
@@ -209,7 +209,7 @@ public class ArchiveUtils {
             }
             tis.close();
             is.close();
-        } catch (IOException|ArchiveException e) {
+        } catch (IOException | ArchiveException e) {
             e.printStackTrace();
         }
 
@@ -245,7 +245,7 @@ public class ArchiveUtils {
                 });
             }
             aos.finish();
-        } catch (IOException|ArchiveException e) {
+        } catch (IOException | ArchiveException e) {
             e.printStackTrace();
         }
         return BackgroundUtils.ARCHIVE_LOCATION;
@@ -290,7 +290,7 @@ public class ArchiveUtils {
     private static void addFilesToCompression(
             ArchiveOutputStream taos, File file, String dir) throws IOException {
 
-        taos.putArchiveEntry(new TarArchiveEntry(file, dir+"/"+file.getName()));
+        taos.putArchiveEntry(new TarArchiveEntry(file, dir + "/" + file.getName()));
 
         if (file.isFile()) {
             // Add the file to the archive

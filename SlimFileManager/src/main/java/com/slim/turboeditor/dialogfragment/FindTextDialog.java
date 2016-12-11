@@ -47,11 +47,16 @@ import butterknife.ButterKnife;
 // ...
 public class FindTextDialog extends DialogFragment {
 
-    @Bind(R.id.text_to_find) EditText textToFind;
-    @Bind(R.id.text_to_replace) EditText textToReplace;
-    @Bind(R.id.regex_check) CheckBox regexCheck;
-    @Bind(R.id.replace_check) CheckBox replaceCheck;
-    @Bind(R.id.match_case_check) CheckBox matchCaseCheck;
+    @Bind(R.id.text_to_find)
+    EditText textToFind;
+    @Bind(R.id.text_to_replace)
+    EditText textToReplace;
+    @Bind(R.id.regex_check)
+    CheckBox regexCheck;
+    @Bind(R.id.replace_check)
+    CheckBox replaceCheck;
+    @Bind(R.id.match_case_check)
+    CheckBox matchCaseCheck;
 
     public static FindTextDialog newInstance(String allText) {
         final FindTextDialog f = new FindTextDialog();

@@ -17,17 +17,17 @@ import java.util.concurrent.Executor;
 public class DriveFiles extends HashMap<File, ArrayList<File>> {
 
 
-    private ArrayMap<String, File> mIndex = new ArrayMap<>();
     private static DriveFiles INSTANCE;
     private static boolean sPopulated = false;
-
-    private File mRootFile;
 
     static {
         if (INSTANCE == null) {
             INSTANCE = new DriveFiles();
         }
     }
+
+    private ArrayMap<String, File> mIndex = new ArrayMap<>();
+    private File mRootFile;
 
     public static void populate(final Drive drive, Executor executor) {
         sPopulated = false;
@@ -36,6 +36,7 @@ public class DriveFiles extends HashMap<File, ArrayList<File>> {
                 INSTANCE.clear();
                 INSTANCE.mIndex.clear();
             }
+
             protected Void doInBackground(Void... v) {
                 List<File> result = new ArrayList<>();
                 try {
@@ -78,6 +79,7 @@ public class DriveFiles extends HashMap<File, ArrayList<File>> {
                 }
                 return null;
             }
+
             protected void onPostExecute(Void v) {
                 sPopulated = true;
             }

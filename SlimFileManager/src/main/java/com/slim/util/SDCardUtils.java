@@ -31,8 +31,8 @@ package com.slim.util;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
-import android.os.storage.StorageVolume;
 import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
 import android.util.Log;
 
 import java.io.File;
@@ -42,11 +42,33 @@ public class SDCardUtils {
     private static final String TAG = "SDCard";
 
     private static final int VOLUME_SDCARD_INDEX = 1;
-
+    private static SDCardUtils sSDCard;
     private StorageManager mStorageManager = null;
     private StorageVolume mVolume = null;
     private String path = null;
-    private static SDCardUtils sSDCard;
+
+    private SDCardUtils(Context context) {
+        try {
+            mStorageManager = (StorageManager) context.getSystemService(Context.STORAGE_SERVICE);
+            Method volumeList = mStorageManager.getClass().getDeclaredMethod("getVolumeList");
+            final StorageVolume[] volumes = (StorageVolume[]) volumeList.invoke(mStorageManager);
+            if (volumes.length > VOLUME_SDCARD_INDEX) {
+                mVolume = volumes[VOLUME_SDCARD_INDEX];
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "couldn't talk to MountService", e);
+        }
+    }
+
+    public static void initialize(Context context) {
+        if (sSDCard == null) {
+            sSDCard = new SDCardUtils(context);
+        }
+    }
+
+    public static synchronized SDCardUtils instance() {
+        return sSDCard;
+    }
 
     public boolean isWriteable() {
         return mVolume != null && getSDCardStorageState().equals(Environment.MEDIA_MOUNTED);
@@ -76,34 +98,11 @@ public class SDCardUtils {
         }
     }
 
-    public static void initialize(Context context) {
-        if (sSDCard == null) {
-            sSDCard = new SDCardUtils(context);
-        }
-    }
-
-    public static synchronized SDCardUtils instance() {
-        return sSDCard;
-    }
-
     private String getSDCardStorageState() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             return mVolume.getState();
         } else {
             return Environment.MEDIA_MOUNTED;
-        }
-    }
-
-    private SDCardUtils(Context context) {
-        try {
-            mStorageManager = (StorageManager) context.getSystemService(Context.STORAGE_SERVICE);
-            Method volumeList = mStorageManager.getClass().getDeclaredMethod("getVolumeList");
-            final StorageVolume[] volumes = (StorageVolume[]) volumeList.invoke(mStorageManager);
-            if (volumes.length > VOLUME_SDCARD_INDEX) {
-                mVolume = volumes[VOLUME_SDCARD_INDEX];
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "couldn't talk to MountService", e);
         }
     }
 

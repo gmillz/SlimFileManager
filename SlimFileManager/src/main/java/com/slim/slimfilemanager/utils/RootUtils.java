@@ -1,7 +1,6 @@
 package com.slim.slimfilemanager.utils;
 
 import android.text.TextUtils;
-import trikita.log.Log;
 
 import org.apache.commons.io.IOUtils;
 
@@ -11,15 +10,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
+import trikita.log.Log;
+
 public class RootUtils {
 
     protected final static Pattern sEscape = Pattern.compile("([\"\'`\\\\])");
-
-    public static class CommandOutput {
-        String output;
-        String error;
-        int exitCode;
-    }
 
     public static ArrayList<String> listFiles(String path, boolean showHidden) {
         if (!isRootAvailable()) return null;
@@ -57,7 +52,7 @@ public class RootUtils {
             if (output.exitCode != 0 || (!TextUtils.isEmpty(output.error))) {
                 Log.e("Root Error, cmd: " + cmd, "error: " + output.error);
             }
-        } catch (IOException|InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         return output;
@@ -167,5 +162,11 @@ public class RootUtils {
         remountSystem("rw");
         runCommand("mv " + oldFile.getAbsolutePath() + " " + newFile.getAbsolutePath() + "\n");
         remountSystem("ro");
+    }
+
+    public static class CommandOutput {
+        String output;
+        String error;
+        int exitCode;
     }
 }

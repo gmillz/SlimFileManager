@@ -1,7 +1,5 @@
 package com.slim.slimfilemanager.fragment;
 
-import static android.app.Activity.RESULT_OK;
-
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
@@ -41,26 +39,21 @@ import java.util.Arrays;
 
 import trikita.log.Log;
 
+import static android.app.Activity.RESULT_OK;
+
 public class DriveFragment extends BaseBrowserFragment {
 
-    private GoogleAccountCredential mCredential;
-    private Drive mDrive;
-
-    private SharedPreferences mPrefs;
-
+    public static final String ROOT_FOLDER = "My Drive";
     private static final int REQUEST_ACCOUNT_PICKER = 1000;
     private static final int REQUEST_AUTHORIZATION = 1001;
     private static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-
     private static final String PREF_ACCOUNT_NAME = "accountName";
-
     private static final String[] SCOPES = {
             DriveScopes.DRIVE
     };
-
-    public static final String ROOT_FOLDER = "My Drive";
-
-
+    private GoogleAccountCredential mCredential;
+    private Drive mDrive;
+    private SharedPreferences mPrefs;
     private ListFiles.Callback mCallback = new ListFiles.Callback() {
         @Override
         public void filesList(ArrayList<com.google.api.services.drive.model.File> files) {
@@ -121,8 +114,8 @@ public class DriveFragment extends BaseBrowserFragment {
     private boolean isGooglePlayServicesAvailable() {
         GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
         int result = googleAPI.isGooglePlayServicesAvailable(mContext);
-        if(result != ConnectionResult.SUCCESS) {
-            if(googleAPI.isUserResolvableError(result)) {
+        if (result != ConnectionResult.SUCCESS) {
+            if (googleAPI.isUserResolvableError(result)) {
                 googleAPI.getErrorDialog(mActivity, result,
                         REQUEST_GOOGLE_PLAY_SERVICES).show();
             }
@@ -208,6 +201,7 @@ public class DriveFragment extends BaseBrowserFragment {
                 DriveFile f = new DriveFile(mDrive, file);
                 return getRootFolder() + f.getPath();
             }
+
             protected void onPostExecute(String path) {
                 setPathText(path);
             }
@@ -320,11 +314,13 @@ public class DriveFragment extends BaseBrowserFragment {
             protected void onPreExecute() {
                 showProgressDialog(R.string.delete_dialog_title, true);
             }
+
             protected Void doInBackground(Void... v) {
                 DriveUtils.deleteFile(mDrive, path);
                 DriveFiles.removeFile(DriveFiles.get(path));
                 return null;
             }
+
             protected void onPostExecute(Void v) {
                 hideProgressDialog();
             }

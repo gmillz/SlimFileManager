@@ -1,9 +1,5 @@
 package com.slim.slimfilemanager;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import android.Manifest;
 import android.app.Activity;
 import android.app.Fragment;
@@ -11,8 +7,8 @@ import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -51,6 +47,10 @@ import com.slim.slimfilemanager.widget.TabItem;
 import com.slim.slimfilemanager.widget.TabPageIndicator;
 import com.slim.util.SDCardUtils;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import trikita.log.Log;
@@ -64,35 +64,45 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     private static final int USB_OTG_ID = 0x004;
     private static final int ROOT_ID = 0x005;
     private static final int SDCARD_ID = 0x006;
-
-    private List<Bookmark> mBookmarks = new ArrayList<>();
-
-    private BookmarkHelper mBookmarkHelper;
-
-    private SectionsPagerAdapter mSectionsPagerAdapter;
-
-    private BaseBrowserFragment mFragment;
-
-    @Bind(R.id.base) View mView;
-    @Bind(R.id.toolbar) Toolbar mToolbar;
-    @Bind(R.id.pager) ViewPager mViewPager;
-    @Bind(R.id.indicator) PageIndicator mPageIndicator;
-    @Bind(R.id.tab_indicator) TabPageIndicator mTabs;
-    @Bind(R.id.drawer_layout) DrawerLayout mDrawerLayout;
-    @Bind(R.id.nav_view) NavigationView mNavView;
-    @Bind(R.id.paste) FloatingActionButton mPasteButton;
-    @Bind(R.id.float_button) FloatingActionsMenu mActionMenu;
-    private ActionBarDrawerToggle mDrawerToggle;
-
+    @Bind(R.id.base)
+    View mView;
+    @Bind(R.id.toolbar)
+    Toolbar mToolbar;
+    @Bind(R.id.pager)
+    ViewPager mViewPager;
+    @Bind(R.id.indicator)
+    PageIndicator mPageIndicator;
+    @Bind(R.id.tab_indicator)
+    TabPageIndicator mTabs;
+    @Bind(R.id.drawer_layout)
+    DrawerLayout mDrawerLayout;
+    @Bind(R.id.nav_view)
+    NavigationView mNavView;
+    @Bind(R.id.paste)
+    FloatingActionButton mPasteButton;
+    @Bind(R.id.float_button)
+    FloatingActionsMenu mActionMenu;
     int mCurrentPosition;
     boolean mMove;
     boolean mPicking;
-
+    private List<Bookmark> mBookmarks = new ArrayList<>();
+    private BookmarkHelper mBookmarkHelper;
+    private SectionsPagerAdapter mSectionsPagerAdapter;
+    SharedPreferences.OnSharedPreferenceChangeListener mPreferenceListener
+            = new SharedPreferences.OnSharedPreferenceChangeListener() {
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            for (TabItem tabItem : mSectionsPagerAdapter.getItems()) {
+                tabItem.fragment.onPreferencesChanged();
+            }
+            if (key.equals(SettingsProvider.SMALL_INDICATOR)) {
+                setupPageIndicators();
+            }
+        }
+    };
+    private BaseBrowserFragment mFragment;
+    private ActionBarDrawerToggle mDrawerToggle;
     private List<ActivityCallback> mCallbacks = new ArrayList<>();
-
-    public interface ActivityCallback {
-        void onActivityResult(int requestCode, int resultCode, Intent data);
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -181,7 +191,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                          @NonNull int[] grantResults) {
+                                           @NonNull int[] grantResults) {
         if (requestCode == 1) {
             boolean denied = false;
             for (int i = 0; i < permissions.length; i++) {
@@ -198,48 +208,48 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            int id = item.getItemId();
-            int fragmentId = TabItem.TAB_BROWSER;
-            String path = null;
-            if (id == ROOT_ID) {
-                path = "/";
+        int id = item.getItemId();
+        int fragmentId = TabItem.TAB_BROWSER;
+        String path = null;
+        if (id == ROOT_ID) {
+            path = "/";
 
-            } else if (id == SDCARD_ID) {
-                path = Environment.getExternalStorageDirectory().getAbsolutePath();
-            } else if (id == EXTERNALSD_ID) {
-                path = SDCardUtils.instance().getDirectory();
+        } else if (id == SDCARD_ID) {
+            path = Environment.getExternalStorageDirectory().getAbsolutePath();
+        } else if (id == EXTERNALSD_ID) {
+            path = SDCardUtils.instance().getDirectory();
+        } else {
+            for (Bookmark bookmark : mBookmarks) {
+                if (bookmark.getMenuId() == id) {
+                    path = bookmark.getPath();
+                    fragmentId = bookmark.getFragmentId();
+                    break;
+                }
+            }
+        }
+
+        if (!TextUtils.isEmpty(path)) {
+            if (mSectionsPagerAdapter.containsTabId(fragmentId)) {
+                mSectionsPagerAdapter.moveToTabId(fragmentId, path);
             } else {
-                for (Bookmark bookmark : mBookmarks) {
-                    if (bookmark.getMenuId() == id) {
-                        path = bookmark.getPath();
-                        fragmentId = bookmark.getFragmentId();
-                        break;
-                    }
-                }
+                mSectionsPagerAdapter.addTabId(fragmentId, path);
             }
-
-            if (!TextUtils.isEmpty(path)) {
-                if (mSectionsPagerAdapter.containsTabId(fragmentId)) {
-                    mSectionsPagerAdapter.moveToTabId(fragmentId, path);
-                } else {
-                    mSectionsPagerAdapter.addTabId(fragmentId, path);
-                }
+        }
+        if (id == DROPBOX_ID) {
+            if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DROPBOX)) {
+                mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DROPBOX);
+            } else {
+                mSectionsPagerAdapter.addTabId(TabItem.TAB_DROPBOX);
             }
-            if (id == DROPBOX_ID) {
-                if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DROPBOX)) {
-                    mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DROPBOX);
-                } else {
-                    mSectionsPagerAdapter.addTabId(TabItem.TAB_DROPBOX);
-                }
-            } else if (id == DRIVE_ID) {
-                if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DRIVE)) {
-                    mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DRIVE);
-                } else {
-                    mSectionsPagerAdapter.addTabId(TabItem.TAB_DRIVE);
-                }
+        } else if (id == DRIVE_ID) {
+            if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DRIVE)) {
+                mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DRIVE);
+            } else {
+                mSectionsPagerAdapter.addTabId(TabItem.TAB_DRIVE);
             }
-            item.setEnabled(true);
-            mDrawerLayout.closeDrawers();
+        }
+        item.setEnabled(true);
+        mDrawerLayout.closeDrawers();
         return true;
     }
 
@@ -369,8 +379,8 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     private void addBaseItems() {
         mNavView.getMenu().add(0, ROOT_ID, 0, R.string.root_title)
                 .setVisible(SettingsProvider.getBoolean(this,
-                SettingsProvider.KEY_ENABLE_ROOT, false)
-                && RootUtils.isRootAvailable());
+                        SettingsProvider.KEY_ENABLE_ROOT, false)
+                        && RootUtils.isRootAvailable());
         mNavView.getMenu().add(0, SDCARD_ID, 0, R.string.sdcard_title);
 
         getExternalSDCard();
@@ -605,6 +615,41 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         }
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+        if (level >= Activity.TRIM_MEMORY_MODERATE) {
+            IconCache.clearCache();
+            com.slim.slimfilemanager.services.drive.IconCache.clearCache();
+            com.slim.slimfilemanager.services.dropbox.IconCache.clearCache();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        SettingsProvider.get(this)
+                .unregisterOnSharedPreferenceChangeListener(mPreferenceListener);
+    }
+
+    private void saveTabs() {
+        if (mSectionsPagerAdapter == null) return;
+        ArrayList<String> arrayList = new ArrayList<>();
+        for (TabItem item : mSectionsPagerAdapter.getItems()) {
+            String path = item.fragment.getCurrentPath();
+            if (!TextUtils.isEmpty(path)) {
+                arrayList.add(item.fragment.getCurrentPath());
+            }
+        }
+        if (!arrayList.isEmpty()) {
+            SettingsProvider.putTabList(this, "tabs", mSectionsPagerAdapter.getItems());
+        }
+        SettingsProvider.putInt(this, "current_tab", mViewPager.getCurrentItem());
+    }
+
+    public interface ActivityCallback {
+        void onActivityResult(int requestCode, int resultCode, Intent data);
+    }
+
     public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
         ArrayList<TabItem> mItems = new ArrayList<>();
@@ -725,48 +770,4 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             super.setPrimaryItem(container, position, object);
         }
     }
-
-    @Override
-    public void onTrimMemory(int level) {
-        if (level >= Activity.TRIM_MEMORY_MODERATE) {
-            IconCache.clearCache();
-            com.slim.slimfilemanager.services.drive.IconCache.clearCache();
-            com.slim.slimfilemanager.services.dropbox.IconCache.clearCache();
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        SettingsProvider.get(this)
-                .unregisterOnSharedPreferenceChangeListener(mPreferenceListener);
-    }
-
-    private void saveTabs() {
-        if (mSectionsPagerAdapter == null) return;
-        ArrayList<String> arrayList = new ArrayList<>();
-        for (TabItem item : mSectionsPagerAdapter.getItems()) {
-            String path = item.fragment.getCurrentPath();
-            if (!TextUtils.isEmpty(path)) {
-                arrayList.add(item.fragment.getCurrentPath());
-            }
-        }
-        if (!arrayList.isEmpty()) {
-            SettingsProvider.putTabList(this, "tabs", mSectionsPagerAdapter.getItems());
-        }
-        SettingsProvider.putInt(this, "current_tab", mViewPager.getCurrentItem());
-    }
-
-    SharedPreferences.OnSharedPreferenceChangeListener mPreferenceListener
-            = new SharedPreferences.OnSharedPreferenceChangeListener() {
-        @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            for (TabItem tabItem : mSectionsPagerAdapter.getItems()) {
-                tabItem.fragment.onPreferencesChanged();
-            }
-            if (key.equals(SettingsProvider.SMALL_INDICATOR)) {
-                setupPageIndicators();
-            }
-        }
-    };
 }

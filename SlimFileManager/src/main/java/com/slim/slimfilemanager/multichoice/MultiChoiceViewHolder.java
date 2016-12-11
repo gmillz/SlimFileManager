@@ -41,16 +41,16 @@ public class MultiChoiceViewHolder extends RebindReportingHolder
                 itemView.getBackground());
     }
 
+    private static StateListAnimator getRaiseStateListAnimator(Context context) {
+        return AnimatorInflater.loadStateListAnimator(context, R.anim.raise);
+    }
+
     private void setSelectionModeAnimator(StateListAnimator animator) {
         mSelectionModeAnimator = animator;
     }
 
     private void setDefaultAnimator(StateListAnimator animator) {
         mDefaultAnimator = animator;
-    }
-
-    private static StateListAnimator getRaiseStateListAnimator(Context context) {
-        return AnimatorInflater.loadStateListAnimator(context, R.anim.raise);
     }
 
     public void setSelectionModeBackgroundDrawable(Drawable selectionModeBackgroundDrawable) {

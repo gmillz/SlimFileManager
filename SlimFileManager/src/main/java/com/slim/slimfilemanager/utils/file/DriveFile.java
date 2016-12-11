@@ -14,10 +14,9 @@ import trikita.log.Log;
 
 public class DriveFile extends BaseFile {
 
+    public static final String FOLDER_TYPE = "application/vnd.google-apps.folder";
     private com.google.api.services.drive.model.File mFile;
     private Drive mDrive;
-
-    public static final String FOLDER_TYPE = "application/vnd.google-apps.folder";
 
     public DriveFile(Drive drive, com.google.api.services.drive.model.File file) {
         mFile = file;
@@ -63,7 +62,7 @@ public class DriveFile extends BaseFile {
 
     @Override
     public String getRealPath() {
-        return  mFile.getId();
+        return mFile.getId();
     }
 
     @Override
