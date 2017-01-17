@@ -59,6 +59,8 @@ public class BrowserFragment extends BaseBrowserFragment {
         } else if (file.getAbsolutePath().equals(
                 Environment.getExternalStorageDirectory().getAbsolutePath())) {
             title = "SDCARD";
+        }else {
+            title = path;
         }
         return title;
     }
@@ -167,7 +169,7 @@ public class BrowserFragment extends BaseBrowserFragment {
         Log.d("DATA=" + Environment.getDataDirectory());
         if (SettingsProvider.getBoolean(mContext, SettingsProvider.KEY_ENABLE_ROOT, false)
                 && RootUtils.isRootAvailable()) {
-            return File.separator;
+            return "/";
         } else {
             return Environment.getExternalStorageDirectory().getAbsolutePath();
         }
@@ -175,7 +177,16 @@ public class BrowserFragment extends BaseBrowserFragment {
 
     @Override
     public void backPressed() {
-        filesChanged(new File(mCurrentPath).getParent());
+        try{
+            if (mCurrentPath.equals("/system")) {
+                filesChanged("/");
+            } else {
+                filesChanged(new File(mCurrentPath).getParentFile().getName());
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
