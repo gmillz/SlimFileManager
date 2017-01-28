@@ -386,10 +386,9 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
             mSearchView.setIconified(true);
             return true;
         }
-        if (!mCurrentPath.equals(getRootFolder())) {
-            backPressed();
-            mExitOnBack = false;
-        } else if (mCurrentPath.equals(getRootFolder())) {
+
+
+        if (mCurrentPath.equals(getRootFolder())||mCurrentPath.equals("/")) {
             if (mExitOnBack) {
                 mActivity.finish();
             } else {
@@ -397,6 +396,9 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                         Toast.LENGTH_SHORT).show();
                 mExitOnBack = true;
             }
+        } else if (!mCurrentPath.equals(getRootFolder())) {
+            backPressed();
+            mExitOnBack = false;
         } else {
             mExitOnBack = false;
         }

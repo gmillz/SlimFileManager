@@ -18,7 +18,15 @@ public class TabItem {
     public static TabItem fromString(String s) {
         String[] fields = s.split("<.>");
         String path = fields[0];
-        int id = Integer.parseInt(fields[1]);
+        int id = 0;
+
+        try {
+            id = Integer.parseInt(fields[1]);
+        }
+        catch (ArrayIndexOutOfBoundsException e){
+            e.printStackTrace();
+        }
+
         return new TabItem(path, id);
     }
 
