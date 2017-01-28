@@ -2,13 +2,9 @@ package com.slim.slimfilemanager.widget;
 
 import com.slim.slimfilemanager.fragment.BaseBrowserFragment;
 import com.slim.slimfilemanager.fragment.BrowserFragment;
-import com.slim.slimfilemanager.fragment.DriveFragment;
-import com.slim.slimfilemanager.fragment.DropboxFragment;
 
 public class TabItem {
     public static final int TAB_BROWSER = 1001;
-    public static final int TAB_DROPBOX = 1002;
-    public static final int TAB_DRIVE = 1003;
     public BaseBrowserFragment fragment;
     public String path;
     public int id;
@@ -27,13 +23,7 @@ public class TabItem {
     }
 
     private void setFragment() {
-        if (id == TAB_DROPBOX) {
-            fragment = DropboxFragment.newInstance(path);
-        } else if (id == TAB_DRIVE) {
-            fragment = DriveFragment.newInstance(path);
-        } else {
-            fragment = BrowserFragment.newInstance(path);
-        }
+        fragment = BrowserFragment.newInstance(path);
     }
 
     public String toString() {

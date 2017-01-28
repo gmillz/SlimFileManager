@@ -89,13 +89,15 @@ public class SettingBase {
     }
 
     @SuppressWarnings("unused")
-    public void setOnSettingClicked(OnSettingClicked onSettingClicked) {
+    public SettingBase setOnSettingClicked(OnSettingClicked onSettingClicked) {
         mOnSettingClicked = onSettingClicked;
+        return this;
     }
 
     @SuppressWarnings("unused")
-    public void setOnSettingChanged(OnSettingChanged onSettingChanged) {
+    public SettingBase setOnSettingChanged(OnSettingChanged onSettingChanged) {
         mOnSettingChanged = onSettingChanged;
+        return this;
     }
 
     public String getKey() {

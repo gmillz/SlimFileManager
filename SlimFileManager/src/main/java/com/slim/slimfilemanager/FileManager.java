@@ -58,8 +58,6 @@ import trikita.log.Log;
 public class FileManager extends ThemeActivity implements View.OnClickListener,
         NavigationView.OnNavigationItemSelectedListener {
 
-    private static final int DROPBOX_ID = 0x001;
-    private static final int DRIVE_ID = 0x002;
     private static final int EXTERNALSD_ID = 0x003;
     private static final int USB_OTG_ID = 0x004;
     private static final int ROOT_ID = 0x005;
@@ -171,8 +169,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     public void checkPermissions() {
         String[] permissions = {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.GET_ACCOUNTS
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
         };
 
         boolean granted = true;
@@ -233,19 +230,6 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
                 mSectionsPagerAdapter.moveToTabId(fragmentId, path);
             } else {
                 mSectionsPagerAdapter.addTabId(fragmentId, path);
-            }
-        }
-        if (id == DROPBOX_ID) {
-            if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DROPBOX)) {
-                mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DROPBOX);
-            } else {
-                mSectionsPagerAdapter.addTabId(TabItem.TAB_DROPBOX);
-            }
-        } else if (id == DRIVE_ID) {
-            if (mSectionsPagerAdapter.containsTabId(TabItem.TAB_DRIVE)) {
-                mSectionsPagerAdapter.moveToTabId(TabItem.TAB_DRIVE);
-            } else {
-                mSectionsPagerAdapter.addTabId(TabItem.TAB_DRIVE);
             }
         }
         item.setEnabled(true);
@@ -460,15 +444,12 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             @Override
             public void run() {
                 String title = fragment.getTabTitle(path);
-                if (fragment.getUserVisibleHint()) {
-                    mTabs.setTabTitle(title, mCurrentPosition);
-                } else {
-                    for (TabItem item : mSectionsPagerAdapter.getItems()) {
-                        if (item.fragment == fragment) {
-                            mTabs.setTabTitle(
-                                    title, mSectionsPagerAdapter.getItems().indexOf(item));
-                            break;
-                        }
+                for (TabItem item : mSectionsPagerAdapter.getItems()) {
+                    if (item.fragment == fragment) {
+                        Log.d("TEST", "path-" + path);
+                        mTabs.setTabTitle(
+                                title, mSectionsPagerAdapter.getItems().indexOf(item));
+                        break;
                     }
                 }
             }
@@ -619,8 +600,6 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     public void onTrimMemory(int level) {
         if (level >= Activity.TRIM_MEMORY_MODERATE) {
             IconCache.clearCache();
-            com.slim.slimfilemanager.services.drive.IconCache.clearCache();
-            com.slim.slimfilemanager.services.dropbox.IconCache.clearCache();
         }
     }
 
@@ -661,11 +640,11 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         }
 
         void addTab(String path) {
-            mItems.add(new TabItem(path, TabItem.TAB_BROWSER));
+            TabItem tab = new TabItem(path, TabItem.TAB_BROWSER);
+            mItems.add(tab);
             notifyDataSetChanged();
             FileManager.this.mTabs.notifyDataSetChanged();
             mViewPager.setCurrentItem(getCount());
-            //TODO setTabTitle(mItems.get(mItems.size() - 1).fragment);
             if (mItems.size() == 1) {
                 setCurrentlyDisplayedFragment(mItems.get(0).fragment);
             }
@@ -744,15 +723,9 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
         @Override
         public CharSequence getPageTitle(int position) {
-            if (mItems.get(position).id == TabItem.TAB_DROPBOX) {
-                return "Dropbox";
-            } else if (mItems.get(position).id == TabItem.TAB_DRIVE) {
-                return "Google Drive";
-            }
-            if (!TextUtils.isEmpty(mItems.get(position).fragment.getCurrentPath())) {
-                File file = new File(mItems.get(position).fragment.getCurrentPath());
-                if (file.exists())
-                    return file.getName();
+            if (!TextUtils.isEmpty(mItems.get(position).path)) {
+                return mItems.get(position).fragment.getTabTitle(
+                        mItems.get(position).path);
             }
             return "";
         }

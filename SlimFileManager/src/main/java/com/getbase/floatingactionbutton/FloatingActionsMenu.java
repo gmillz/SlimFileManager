@@ -14,6 +14,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.ContextThemeWrapper;
 import android.view.TouchDelegate;
@@ -26,6 +27,7 @@ import android.widget.TextView;
 
 import com.slim.slimfilemanager.R;
 
+@SuppressWarnings("unused")
 public class FloatingActionsMenu extends ViewGroup {
     public static final int EXPAND_UP = 0;
     public static final int EXPAND_DOWN = 1;
@@ -33,7 +35,6 @@ public class FloatingActionsMenu extends ViewGroup {
     public static final int EXPAND_RIGHT = 3;
 
     public static final int LABELS_ON_LEFT_SIDE = 0;
-    public static final int LABELS_ON_RIGHT_SIDE = 1;
 
     private static final int ANIMATION_DURATION = 300;
     private static final float COLLAPSED_PLUS_ROTATION = 0f;
@@ -182,7 +183,7 @@ public class FloatingActionsMenu extends ViewGroup {
     }
 
     private int getColor(@ColorRes int id) {
-        return getResources().getColor(id);
+        return ContextCompat.getColor(getContext(), id);
     }
 
     @Override
@@ -267,7 +268,9 @@ public class FloatingActionsMenu extends ViewGroup {
                         ? r - l - mMaxButtonWidth / 2
                         : mMaxButtonWidth / 2;
                 int addButtonLeft = buttonsHorizontalCenter - mAddButton.getMeasuredWidth() / 2;
-                mAddButton.layout(addButtonLeft, addButtonY, addButtonLeft + mAddButton.getMeasuredWidth(), addButtonY + mAddButton.getMeasuredHeight());
+                mAddButton.layout(addButtonLeft, addButtonY, addButtonLeft
+                        + mAddButton.getMeasuredWidth(), addButtonY
+                        + mAddButton.getMeasuredHeight());
 
                 int labelsOffset = mMaxButtonWidth / 2 + mLabelsMargin;
                 int labelsXNearButton = mLabelsPosition == LABELS_ON_LEFT_SIDE

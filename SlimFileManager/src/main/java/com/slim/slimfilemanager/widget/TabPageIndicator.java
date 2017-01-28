@@ -158,6 +158,7 @@ public class TabPageIndicator extends HorizontalScrollView
         final TabView tabView = new TabView(getContext());
         tabView.mIndex = index;
         tabView.setFocusable(true);
+        tabView.setTextAppearance(R.style.TextAppearance_TabPageIndicator);
         tabView.setOnClickListener(mTabClickListener);
         tabView.setText(text);
         tabView.setGravity(Gravity.CENTER);
@@ -253,7 +254,7 @@ public class TabPageIndicator extends HorizontalScrollView
         private int mIndex;
 
         public TabView(Context context) {
-            super(context, null, R.attr.tabPageIndicatorStyle);
+            super(context, null);
         }
 
         @Override

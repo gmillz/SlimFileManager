@@ -43,10 +43,10 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <style name="TextAppearance.TabPageIndicator" parent="android:TextAppearance.Medium">
-        <item name="android:typeface">monospace</item>
+    <style name="TextAppearance.TabPageIndicator" parent="android:TextAppearance.Small">
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@android:color/white</item>
+        <item name="android:textAllCaps">true</item>
     </style>
 
     <style name="AppTheme.LabelStyle">

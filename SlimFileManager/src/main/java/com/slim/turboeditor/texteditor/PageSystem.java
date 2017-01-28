@@ -52,7 +52,7 @@ public class PageSystem {
         int nextIndexOfReturn;
         final int textLength = TextUtils.isEmpty(text) ? 0 : text.length();
         boolean pageSystemEnabled =
-                SettingsProvider.getBoolean(mActivity, SettingsProvider.SPLIT_TEXT, true);
+                SettingsProvider.getBoolean(mActivity, SettingsProvider.SPLIT_TEXT, false);
 
         if (pageSystemEnabled) {
             while (i < textLength) {

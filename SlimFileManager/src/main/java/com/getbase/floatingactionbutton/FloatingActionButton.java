@@ -25,6 +25,7 @@ import android.support.annotation.DimenRes;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -34,6 +35,7 @@ import com.slim.slimfilemanager.R;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+@SuppressWarnings("unused")
 public class FloatingActionButton extends ImageButton {
 
     public static final int SIZE_NORMAL = 0;
@@ -185,7 +187,7 @@ public class FloatingActionButton extends ImageButton {
     }
 
     int getColor(@ColorRes int id) {
-        return getResources().getColor(id);
+        return ContextCompat.getColor(getContext(), id);
     }
 
     float getDimension(@DimenRes int id) {
@@ -220,7 +222,9 @@ public class FloatingActionButton extends ImageButton {
 
         LayerDrawable layerDrawable = new LayerDrawable(
                 new Drawable[]{
-                        getResources().getDrawable(mSize == SIZE_NORMAL ? R.drawable.fab_bg_normal : R.drawable.fab_bg_mini),
+                        ContextCompat.getDrawable(getContext(),
+                                mSize == SIZE_NORMAL ? R.drawable.fab_bg_normal
+                                        : R.drawable.fab_bg_mini),
                         createFillDrawable(strokeWidth),
                         createOuterStrokeDrawable(strokeWidth),
                         getIconDrawable()
@@ -257,7 +261,7 @@ public class FloatingActionButton extends ImageButton {
         if (mIconDrawable != null) {
             return mIconDrawable;
         } else if (mIcon != 0) {
-            return getResources().getDrawable(mIcon);
+            return ContextCompat.getDrawable(getContext(), mIcon);
         } else {
             return new ColorDrawable(Color.TRANSPARENT);
         }
@@ -413,7 +417,7 @@ public class FloatingActionButton extends ImageButton {
     private static class TranslucentLayerDrawable extends LayerDrawable {
         private final int mAlpha;
 
-        public TranslucentLayerDrawable(int alpha, Drawable... layers) {
+        TranslucentLayerDrawable(int alpha, Drawable... layers) {
             super(layers);
             mAlpha = alpha;
         }

@@ -862,7 +862,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         @Bind(R.id.ripple_layout)
         MaterialRippleLayout rippleLayout;
 
-        public BrowserViewHolder(View v) {
+        BrowserViewHolder(View v) {
             super(v, mMultiSelector);
             ButterKnife.bind(this, v);
             v.setOnClickListener(this);

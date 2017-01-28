@@ -3,21 +3,21 @@ package com.gmillz.settingscards;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.StringRes;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
-
-import com.afollestad.materialdialogs.MaterialDialog;
 
 import java.util.Arrays;
 
 public class ListSetting extends SettingBase implements Application.ActivityLifecycleCallbacks {
 
-    String[] mEntries;
-    String[] mValues;
-    boolean mSetSummaryToValue = false;
+    private String[] mEntries;
+    private String[] mValues;
+    private boolean mSetSummaryToValue = false;
 
-    private MaterialDialog mDialog;
+    private AlertDialog mDialog;
     private static Bundle mDialogBundle;
 
     public ListSetting(@StringRes int title, @StringRes int summary, String key) {
@@ -65,24 +65,22 @@ public class ListSetting extends SettingBase implements Application.ActivityLife
     }
 
     private void createDialog(final Context context) {
-        mDialog = new MaterialDialog.Builder(context)
-                .items(mEntries)
-                .title(getTitle())
-                .itemsCallback(new MaterialDialog.ListCallback() {
+        mDialog = new AlertDialog.Builder(context)
+                .setTitle(getTitle())
+                .setItems(mEntries, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onSelection(MaterialDialog dialog, View itemView,
-                                            int which, CharSequence text) {
-                        String v = mValues[which];
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        String v = mValues[i];
                         if (mOnSettingChanged != null) {
-                            mOnSettingChanged.onSettingChanged(
-                                    ListSetting.this, mValues[which]);
+                            mOnSettingChanged.onSettingChanged(ListSetting.this, v);
                         }
                         if (mSetSummaryToValue) {
-                            setSummary(text);
+                            setSummary(mEntries[i]);
                         }
                         SettingsHandler.put(context, mKey, v);
                     }
-                }).build();
+                })
+                .create();
     }
 
     @Override

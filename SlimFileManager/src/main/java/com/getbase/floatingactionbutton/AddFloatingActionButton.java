@@ -14,6 +14,7 @@ import android.util.AttributeSet;
 
 import com.slim.slimfilemanager.R;
 
+@SuppressWarnings("unused")
 public class AddFloatingActionButton extends FloatingActionButton {
     int mPlusColor;
 

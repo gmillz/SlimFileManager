@@ -9,7 +9,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 
-import com.afollestad.materialdialogs.color.CircleView;
 import com.slim.slimfilemanager.settings.SettingsProvider;
 
 public class ThemeActivity extends AppCompatActivity {
@@ -65,12 +64,8 @@ public class ThemeActivity extends AppCompatActivity {
     }
 
     private void loadColors(Context context) {
-        mPrimaryColor = SettingsProvider.getInt(context, KEY_PRIMARY_COLOR, 0);
-        mPrimaryColorDark = CircleView.shiftColorDown(mPrimaryColor);
-        if (mPrimaryColor == 0) {
-            mPrimaryColor = getAttrColor(context, android.R.attr.colorPrimary);
-            mPrimaryColorDark = getAttrColor(context, android.R.attr.colorPrimaryDark);
-        }
+        mPrimaryColor = getAttrColor(context, android.R.attr.colorPrimary);
+        mPrimaryColorDark = getAttrColor(context, android.R.attr.colorPrimaryDark);
         mAccentColor = SettingsProvider.getInt(context, KEY_ACCENT_COLOR,
                 getAttrColor(context, android.R.attr.colorAccent));
     }
@@ -98,6 +93,6 @@ public class ThemeActivity extends AppCompatActivity {
     }
 
     private void setStatusBar(int color) {
-        getWindow().setStatusBarColor(CircleView.shiftColorDown(color));
+        //getWindow().setStatusBarColor(CircleView.shiftColorDown(color));
     }
 }

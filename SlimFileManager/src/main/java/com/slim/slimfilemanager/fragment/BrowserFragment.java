@@ -52,6 +52,7 @@ public class BrowserFragment extends BaseBrowserFragment {
 
     @Override
     public String getTabTitle(String path) {
+        if (TextUtils.isEmpty(path)) return "";
         File file = new File(path);
         String title = file.getName();
         if (file.getAbsolutePath().equals("/")) {

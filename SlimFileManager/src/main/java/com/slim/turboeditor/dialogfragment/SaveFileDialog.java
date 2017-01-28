@@ -30,13 +30,10 @@ import android.view.View;
 
 import com.slim.slimfilemanager.R;
 import com.slim.turboeditor.activity.MainActivity;
+import com.slim.turboeditor.util.SaveFileTask;
 import com.slim.turboeditor.views.DialogHelper;
 
 import java.io.File;
-
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 @SuppressLint("ValidFragment")
 public class SaveFileDialog extends DialogFragment {
@@ -78,17 +75,13 @@ public class SaveFileDialog extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (getActivity() != null) {
-                                    ((MainActivity) getActivity()).getSaveFileObservable(
-                                            getActivity(), mFile, mText, mEncoding)
-                                            .subscribeOn(Schedulers.newThread())
-                                            .observeOn(AndroidSchedulers.mainThread())
-                                            .subscribe(new Action1<Boolean>() {
-                                                @Override
-                                                public void call(Boolean aBoolean) {
-                                                    ((MainActivity) getActivity())
-                                                            .savedAFile(aBoolean);
-                                                }
-                                            });
+                                    new SaveFileTask((MainActivity) getActivity(), mFile, mText,
+                                            mEncoding, new SaveFileTask.SaveFileInterface() {
+                                        @Override
+                                        public void fileSaved(Boolean success) {
+                                            ((MainActivity) getActivity()).savedAFile(success);
+                                        }
+                                    });
                                 }
                             }
                         }

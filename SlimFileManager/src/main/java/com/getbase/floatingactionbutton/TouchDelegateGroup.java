@@ -8,28 +8,21 @@ import android.view.View;
 
 import java.util.ArrayList;
 
-public class TouchDelegateGroup extends TouchDelegate {
+class TouchDelegateGroup extends TouchDelegate {
     private static final Rect USELESS_HACKY_RECT = new Rect();
-    private final ArrayList<TouchDelegate> mTouchDelegates = new ArrayList<TouchDelegate>();
+    private final ArrayList<TouchDelegate> mTouchDelegates = new ArrayList<>();
     private TouchDelegate mCurrentTouchDelegate;
     private boolean mEnabled;
 
-    public TouchDelegateGroup(View uselessHackyView) {
+    TouchDelegateGroup(View uselessHackyView) {
         super(USELESS_HACKY_RECT, uselessHackyView);
     }
 
-    public void addTouchDelegate(@NonNull TouchDelegate touchDelegate) {
+    void addTouchDelegate(@NonNull TouchDelegate touchDelegate) {
         mTouchDelegates.add(touchDelegate);
     }
 
-    public void removeTouchDelegate(TouchDelegate touchDelegate) {
-        mTouchDelegates.remove(touchDelegate);
-        if (mCurrentTouchDelegate == touchDelegate) {
-            mCurrentTouchDelegate = null;
-        }
-    }
-
-    public void clearTouchDelegates() {
+    void clearTouchDelegates() {
         mTouchDelegates.clear();
         mCurrentTouchDelegate = null;
     }
@@ -65,7 +58,7 @@ public class TouchDelegateGroup extends TouchDelegate {
         return delegate != null && delegate.onTouchEvent(event);
     }
 
-    public void setEnabled(boolean enabled) {
+    void setEnabled(boolean enabled) {
         mEnabled = enabled;
     }
 }

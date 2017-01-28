@@ -24,7 +24,7 @@ public class NumberPickerPreference extends DialogPreference {
 
     public NumberPickerPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
-        TypedArray prefType = context.obtainStyledAttributes(attrs,
+        /**TypedArray prefType = context.obtainStyledAttributes(attrs,
                 R.styleable.Preference, 0, 0);
         TypedArray numberPickerType = context.obtainStyledAttributes(attrs,
                 R.styleable.NumberPickerPreference, 0, 0);
@@ -38,7 +38,7 @@ public class NumberPickerPreference extends DialogPreference {
         mDefault = prefType.getInt(R.styleable.Preference_defaultValue, mMin);
 
         prefType.recycle();
-        numberPickerType.recycle();
+        numberPickerType.recycle();*/
     }
 
     protected void onAttachedToActivity() {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:manager="http://schemas.android.com/apk/res-auto">
+    android:title="@string/action_settings">
 
     <PreferenceCategory
         android:title="@string/file_manager" />
@@ -50,13 +50,14 @@
         android:title="@string/split_text_if_too_long"
         android:defaultValue="true" />
 
-    <com.slim.preference.NumberPickerPreference
+<!--    <com.slim.preference.NumberPickerPreference
         android:key="font_size"
         android:title="@string/font_size"
         manager:min="1"
         manager:max="36"
         manager:defaultValue="16"
         android:summary="%s"/>
+-->
 
     <PreferenceCategory android:title="Theme Settings" />
 

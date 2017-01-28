@@ -11,7 +11,7 @@ import android.util.TypedValue;
 public class SettingsTheme {
 
     protected int colorAccent;
-    public int cardBackground = 0xff353535;
+    public int cardBackground = 0xffffffff;
     public int pageBackground;
     public int primaryTextColor;
     public int secondaryTextColor;
@@ -22,12 +22,17 @@ public class SettingsTheme {
         } else {
             colorAccent = getAttrColor(context, R.attr.colorAccent);
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cardBackground = getAttrColor(context, android.R.attr.colorBackgroundFloating);
+        } else {
+            cardBackground = getAttrColor(context, android.R.attr.colorBackground);
+        }
         pageBackground = getAttrColor(context, android.R.attr.colorBackground);
         primaryTextColor = getAttrColor(context, android.R.attr.textColorPrimary);
         secondaryTextColor = getAttrColor(context, android.R.attr.textColorSecondary);
     }
 
-    static int getAttrColor(Context context, @AttrRes int attr) {
+    private static int getAttrColor(Context context, @AttrRes int attr) {
         TypedValue tv = new TypedValue();
         context.getTheme().resolveAttribute(attr, tv, true);
         return ContextCompat.getColor(context, tv.resourceId);
