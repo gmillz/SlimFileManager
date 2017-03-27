@@ -3,7 +3,7 @@ apply plugin: 'com.jakewharton.hugo'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "23.0.3"
+    buildToolsVersion '25.0.0'
 
     defaultConfig {
         applicationId "com.slim.slimfilemanager"
@@ -43,11 +43,11 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:support-v13:25.1.0'
-    compile 'com.android.support:recyclerview-v7:25.1.0'
-    compile 'com.android.support:appcompat-v7:25.1.0'
-    compile 'com.android.support:cardview-v7:25.1.0'
-    compile 'com.android.support:design:25.1.0'
+    compile 'com.android.support:support-v13:25.1.1'
+    compile 'com.android.support:recyclerview-v7:25.1.1'
+    compile 'com.android.support:appcompat-v7:25.1.1'
+    compile 'com.android.support:cardview-v7:25.1.1'
+    compile 'com.android.support:design:25.1.1'
 
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'org.androidannotations:androidannotations-api:3.3.2'

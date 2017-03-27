@@ -16,6 +16,9 @@ import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.slimfilemanager.utils.Utils;
 import com.slim.slimfilemanager.utils.file.BaseFile;
 import com.slim.slimfilemanager.utils.file.BasicFile;
+import com.slim.util.Constant;
+
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,6 +92,7 @@ public class BrowserFragment extends BaseBrowserFragment {
     }
 
     public void filesChanged(String file) {
+        if (TextUtils.isEmpty(file)) return;
         super.filesChanged(file);
         if (mExitOnBack) mExitOnBack = false;
         File newPath = new File(file);
@@ -176,6 +180,7 @@ public class BrowserFragment extends BaseBrowserFragment {
 
     @Override
     public void backPressed() {
+        if (TextUtils.isEmpty(mCurrentPath)) return;
         filesChanged(new File(mCurrentPath).getParent());
     }
 
@@ -204,7 +209,10 @@ public class BrowserFragment extends BaseBrowserFragment {
             try {
                 if (!newFile.exists()) {
                     if (newFile.getParentFile().canWrite()) {
-                        if (!newFile.createNewFile()) {
+                        FileUtils.writeStringToFile(newFile, "",
+                                SettingsProvider.getString(mContext,
+                                        SettingsProvider.EDITOR_ENCODING, Constant.DEFAULT_ENCODING));
+                        if (!newFile.exists()) {
                             success = false;
                         }
                     } else if (SettingsProvider.getBoolean(mContext,

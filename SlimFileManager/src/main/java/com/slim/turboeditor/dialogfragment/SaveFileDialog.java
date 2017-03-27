@@ -24,6 +24,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
@@ -32,6 +33,7 @@ import com.slim.slimfilemanager.R;
 import com.slim.turboeditor.activity.MainActivity;
 import com.slim.turboeditor.util.SaveFileTask;
 import com.slim.turboeditor.views.DialogHelper;
+import com.slim.util.MediaStoreUtils;
 
 import java.io.File;
 
@@ -39,21 +41,24 @@ import java.io.File;
 public class SaveFileDialog extends DialogFragment {
 
     File mFile;
+    Uri mUri;
     String mText;
     String mEncoding;
     boolean mOpenNewFileAfter;
 
     @SuppressLint("ValidFragment")
-    public SaveFileDialog(File file, String text, String encoding) {
+    public SaveFileDialog(File file, Uri uri, String text, String encoding) {
         mFile = file;
+        mUri = uri;
         mText = text;
         mEncoding = encoding;
         mOpenNewFileAfter = false;
     }
 
     @SuppressLint("ValidFragment")
-    public SaveFileDialog(File file, String text, String encoding, boolean openNewFileAfter) {
+    public SaveFileDialog(File file, Uri uri, String text, String encoding, boolean openNewFileAfter) {
         mFile = file;
+        mUri = uri;
         mText = text;
         mEncoding = encoding;
         mOpenNewFileAfter = openNewFileAfter;
@@ -65,7 +70,9 @@ public class SaveFileDialog extends DialogFragment {
         View view = new DialogHelper.Builder(getActivity())
                 .setIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_action_save))
                 .setTitle(R.string.salva)
-                .setMessage(String.format(getString(R.string.save_changes), mFile.getName()))
+                .setMessage(String.format(getString(R.string.save_changes),
+                        mFile != null ? mFile.getName() : mUri != null ?
+                                MediaStoreUtils.getFileNameFromUri(getActivity(), mUri) : ""))
                 .createCommonView();
 
         return new AlertDialog.Builder(getActivity())
@@ -75,7 +82,7 @@ public class SaveFileDialog extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (getActivity() != null) {
-                                    new SaveFileTask((MainActivity) getActivity(), mFile, mText,
+                                    new SaveFileTask((MainActivity) getActivity(), mFile, mUri, mText,
                                             mEncoding, new SaveFileTask.SaveFileInterface() {
                                         @Override
                                         public void fileSaved(Boolean success) {

@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.support.v4.content.FileProvider;
 import android.widget.Toast;
 
 import com.slim.slimfilemanager.R;
@@ -52,10 +54,20 @@ public class Utils {
         final Intent i = new Intent(Intent.ACTION_VIEW);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        if (mime != null) {
-            i.setDataAndType(Uri.fromFile(file), mime);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Uri uri = FileProvider.getUriForFile(context, "com.slim.slimfilemanager.fileprovider", file);
+            if (mime != null) {
+                i.setDataAndType(uri, mime);
+            } else {
+                i.setDataAndType(uri, "*/*");
+            }
         } else {
-            i.setDataAndType(Uri.fromFile(file), "*/*");
+            if (mime != null) {
+                i.setDataAndType(Uri.fromFile(file), mime);
+            } else {
+                i.setDataAndType(Uri.fromFile(file), "*/*");
+            }
         }
 
         if (context.getPackageManager().queryIntentActivities(i, 0).isEmpty()) {
@@ -66,9 +78,7 @@ public class Utils {
         try {
             context.startActivity(i);
         } catch (Exception e) {
-            //Toast.makeText(context,
-            //      context.getString(R.string.cantopenfile) + e.getMessage(),
-            //    Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
         }
     }
 

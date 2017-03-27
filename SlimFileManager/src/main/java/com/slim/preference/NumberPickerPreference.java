@@ -1,7 +1,6 @@
 package com.slim.preference;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.preference.Preference;
 import android.util.AttributeSet;
@@ -25,20 +24,20 @@ public class NumberPickerPreference extends DialogPreference {
     public NumberPickerPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
         /**TypedArray prefType = context.obtainStyledAttributes(attrs,
-                R.styleable.Preference, 0, 0);
-        TypedArray numberPickerType = context.obtainStyledAttributes(attrs,
-                R.styleable.NumberPickerPreference, 0, 0);
+         R.styleable.Preference, 0, 0);
+         TypedArray numberPickerType = context.obtainStyledAttributes(attrs,
+         R.styleable.NumberPickerPreference, 0, 0);
 
-        mMaxExternalKey = numberPickerType.getString(R.styleable.NumberPickerPreference_maxExternal);
-        mMinExternalKey = numberPickerType.getString(R.styleable.NumberPickerPreference_minExternal);
+         mMaxExternalKey = numberPickerType.getString(R.styleable.NumberPickerPreference_maxExternal);
+         mMinExternalKey = numberPickerType.getString(R.styleable.NumberPickerPreference_minExternal);
 
-        mMax = prefType.getInt(R.styleable.Preference_max, 5);
-        mMin = prefType.getInt(R.styleable.Preference_min, 0);
+         mMax = prefType.getInt(R.styleable.Preference_max, 5);
+         mMin = prefType.getInt(R.styleable.Preference_min, 0);
 
-        mDefault = prefType.getInt(R.styleable.Preference_defaultValue, mMin);
+         mDefault = prefType.getInt(R.styleable.Preference_defaultValue, mMin);
 
-        prefType.recycle();
-        numberPickerType.recycle();*/
+         prefType.recycle();
+         numberPickerType.recycle();*/
     }
 
     protected void onAttachedToActivity() {

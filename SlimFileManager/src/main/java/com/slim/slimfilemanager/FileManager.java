@@ -509,7 +509,8 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     public void onClick(View v) {
         if (v.getTag().equals(BaseBrowserFragment.ACTION_ADD_FILE)) {
             mActionMenu.collapse();
-            mFragment.showDialog(BaseBrowserFragment.ACTION_ADD_FILE);
+            BaseBrowserFragment fragment = (BaseBrowserFragment) mSectionsPagerAdapter.getItem(mCurrentPosition);
+            fragment.showDialog(BaseBrowserFragment.ACTION_ADD_FILE);
         } else if (v.getTag().equals(BaseBrowserFragment.ACTION_ADD_FOLDER)) {
             mActionMenu.collapse();
             mFragment.showDialog(BaseBrowserFragment.ACTION_ADD_FOLDER);

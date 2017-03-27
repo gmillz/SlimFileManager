@@ -38,6 +38,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="file" />
+                <data android:scheme="content" />
                 <data android:mimeType="*/*" />
                 <data android:host="*" />
                 <data android:pathPattern="/.*\\.txt" />
@@ -79,6 +80,7 @@
                 <data android:pathPattern="/.*\\.r" />
                 <data android:pathPattern="/.*\\.key" />
                 <data android:pathPattern="/.*\\.log" />
+                <data android:pathPattern="/.*\\.mk" />
             </intent-filter>
             <intent-filter >
                 <action android:name="android.intent.action.VIEW" />
@@ -95,6 +97,16 @@
         </activity>
 
         <activity android:name=".settings.SettingsActivity" />
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.slim.slimfilemanager.fileprovider"
+            android:grantUriPermissions="true"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
 
     </application>
 

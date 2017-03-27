@@ -28,6 +28,7 @@ public class PasteTask {
     HashMap<File, BaseFile> mExistingFiles = new HashMap<>();
     ArrayList<BaseFile> mProcess = new ArrayList<>();
     private Callback mCallback;
+
     public PasteTask(Context context,
                      boolean shouldDelete, String location, Callback callback) {
         mContext = context;

@@ -19,6 +19,7 @@
 
 package com.slim.turboeditor.activity;
 
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -46,7 +47,6 @@ import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
 import com.slim.slimfilemanager.settings.SettingsProvider;
-import com.slim.slimfilemanager.utils.FileUtil;
 import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.turboeditor.dialogfragment.FindTextDialog;
 import com.slim.turboeditor.dialogfragment.NumberPickerDialog;
@@ -60,8 +60,10 @@ import com.slim.turboeditor.util.SaveFileTask;
 import com.slim.turboeditor.views.Editor;
 import com.slim.turboeditor.views.GoodScrollView;
 import com.slim.util.Constant;
+import com.slim.util.MediaStoreUtils;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -75,7 +77,6 @@ import java.util.concurrent.Executors;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import trikita.log.Log;
 
 import static butterknife.ButterKnife.findById;
 
@@ -130,6 +131,8 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     private SearchResult searchResult;
     private PageSystem pageSystem;
     private PageSystemButtons pageSystemButtons;
+
+    private Uri mUri;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -237,7 +240,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     @Override
     public void onBackPressed() {
         if (mEditor.canSaveFile()) {
-            new SaveFileDialog(mFile, pageSystem.getAllText(mEditor
+            new SaveFileDialog(mFile, mUri, pageSystem.getAllText(mEditor
                     .getText().toString()), currentEncoding).show(getFragmentManager(),
                     "dialog");
         } else {
@@ -254,7 +257,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
                 final Uri data = intent.getData();
                 File newFile = new File(data.getPath());
 
-                newFileToOpen(newFile, "");
+                newFileToOpen(newFile, null, "");
             } else {
 
                 final Uri data = intent.getData();
@@ -269,11 +272,11 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
 
                 if (requestCode == READ_REQUEST_CODE || requestCode == CREATE_REQUEST_CODE) {
 
-                    newFileToOpen(newFile, "");
+                    newFileToOpen(newFile, null, "");
                 }
 
                 if (requestCode == SAVE_AS_REQUEST_CODE) {
-                    new SaveFileTask(this, mFile, pageSystem.getAllText(mEditor.getText().toString()),
+                    new SaveFileTask(this, mFile, mUri, pageSystem.getAllText(mEditor.getText().toString()),
                             currentEncoding, new SaveFileTask.SaveFileInterface() {
                         @Override
                         public void fileSaved(Boolean success) {
@@ -338,6 +341,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         return true;
     }
 
+    @SuppressLint("CommitTransaction")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int i = item.getItemId();
@@ -468,8 +472,8 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     }
 
     public void saveTheFile(final boolean saveAs) {
-        if (!saveAs && mFile != null && mFile.exists()) {
-            new SaveFileTask(this, mFile, pageSystem.getAllText(mEditor.getText().toString()),
+        if (!saveAs && ((mFile != null && mFile.exists()) || mUri != null)) {
+            new SaveFileTask(this, mFile, mUri, pageSystem.getAllText(mEditor.getText().toString()),
                     currentEncoding, new SaveFileTask.SaveFileInterface() {
                 @Override
                 public void fileSaved(Boolean success) {
@@ -479,7 +483,8 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         } else {
             Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
             intent.setType("*/*");
-            intent.putExtra(Intent.EXTRA_TITLE, mFile.getName());
+            intent.putExtra(Intent.EXTRA_TITLE, mFile != null ? mFile.getName()
+                    : mUri != null ? MediaStoreUtils.getFileNameFromUri(this, mUri) : "");
             startActivityForResult(intent, SAVE_AS_REQUEST_CODE);
         }
     }
@@ -546,11 +551,16 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
                 || Intent.ACTION_PICK.equals(action)
                 && type != null) {
             Uri uri = intent.getData();
-            File newFile = new File(uri.getPath());
-            newFileToOpen(newFile, "");
+            String path = uri.getPath();
+
+            if (uri.getScheme().equalsIgnoreCase("content")) {
+                newFileToOpen(null, uri, "");
+            } else if (path != null) {
+                newFileToOpen(new File(path), null, "");
+            }
         } else if (Intent.ACTION_SEND.equals(action) && type != null) {
             if ("text/plain".equals(type)) {
-                newFileToOpen(null, intent.getStringExtra(Intent.EXTRA_TEXT));
+                newFileToOpen(null, null, intent.getStringExtra(Intent.EXTRA_TEXT));
             }
         }
     }
@@ -582,11 +592,11 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         updateHandler.postDelayed(colorRunnable_duringEditing, SYNTAX_DELAY_MILLIS_LONG);
     }
 
-    void newFileToOpen(final File newFile, final String newFileText) {
+    void newFileToOpen(final File newFile, final Uri uri, String newFileText) {
 
         if (fileOpened && mEditor != null && mEditor.canSaveFile()
                 && mFile != null && pageSystem != null && currentEncoding != null) {
-            new SaveFileDialog(mFile, pageSystem.getAllText(mEditor
+            new SaveFileDialog(mFile, mUri, pageSystem.getAllText(mEditor
                     .getText().toString()), currentEncoding, true)
                     .show(getFragmentManager(), "dialog");
             return;
@@ -597,6 +607,25 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         if (mNewFileTask != null && mNewFileTask.getStatus() == AsyncTask.Status.RUNNING) {
             mNewFileTask.cancel(true);
         }
+
+        if (uri != null) {
+            String encoding;
+            InputStream is;
+            try {
+                is = getContentResolver().openInputStream(uri);
+                encoding = FileUtils.getDetectedEncoding(is);
+                if (encoding.isEmpty()) {
+                    encoding = SettingsProvider.getString(this,
+                            SettingsProvider.EDITOR_ENCODING, Constant.DEFAULT_ENCODING);
+                }
+                is = getContentResolver().openInputStream(uri);
+                newFileText = IOUtils.toString(is, encoding);
+                mUri = uri;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         mFile = newFile;
         mNewFileTask = new NewFileTask();
         mNewFileTask.setMainActivity(this);
@@ -715,6 +744,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         }, 200);
     }
 
+    @SuppressLint("CommitTransaction")
     @Override
     public void pageSystemButtonLongClicked() {
         int maxPages = pageSystem.getMaxPage();
@@ -816,7 +846,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
     public void userDoesntWantToSave(boolean openNewFile, File file) {
         mEditor.fileSaved();
         if (openNewFile)
-            newFileToOpen(file, "");
+            newFileToOpen(file, null, "");
         else
             cannotOpenFile();
     }
@@ -871,7 +901,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
                         fileName = FilenameUtils.getName(filePath);
                         isRootRequired = !newFile.canRead();
                         // if we cannot read the file, root permission required
-                        if (isRootRequired) {
+                        if (isRootRequired && RootUtils.isRootAvailable()) {
                             readUri(newFile, true);
                         } else {
                             readUri(newFile, false);
