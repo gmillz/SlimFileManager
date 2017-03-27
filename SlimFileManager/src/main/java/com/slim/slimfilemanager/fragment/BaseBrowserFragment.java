@@ -637,7 +637,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         DialogFragment newFragment =
                 MyAlertDialogFragment.newInstance(id);
         newFragment.setTargetFragment(this, 0);
-        newFragment.show(getFragmentManager(), "dialog " + id);
+        newFragment.show(mActivity.getFragmentManager(), "dialog " + id);
     }
 
     protected void fileClicked(File file) {
@@ -704,7 +704,6 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                                     }
                                     SelectedFiles.clearAll();
                                     dialog.dismiss();
-                                    getOwner().filesChanged(getOwner().getCurrentPath());
                                 }
                             });
                     builder.setNegativeButton(R.string.cancel, null);

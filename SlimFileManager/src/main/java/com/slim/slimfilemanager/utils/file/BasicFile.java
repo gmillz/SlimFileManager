@@ -59,7 +59,7 @@ public class BasicFile extends BaseFile {
 
     @Override
     public long length() {
-        return mFile.length();
+        return FileUtil.getFileSize(mFile);
     }
 
     @Override

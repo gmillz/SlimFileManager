@@ -2,7 +2,10 @@ package com.slim.slimfilemanager.utils;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.ParcelFileDescriptor;
+import android.support.v4.provider.DocumentFile;
+import android.telephony.IccOpenLogicalChannelResponse;
 import android.text.TextUtils;
 
 import com.slim.slimfilemanager.settings.SettingsProvider;
@@ -13,8 +16,10 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 import trikita.log.Log;
@@ -24,6 +29,32 @@ public class FileUtil {
     public static boolean copyFile(Context context, String f, String fol) {
         File file = new File(f);
         File folder = new File(fol);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            FileInputStream fis = null;
+            OutputStream os = null;
+            try {
+                fis = new FileInputStream(file);
+                DocumentFile target = DocumentFile.fromFile(folder);
+                os = context.getContentResolver().openOutputStream(target.getUri());
+                IOUtils.copy(fis, os);
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (fis != null) {
+                        fis.close();
+                    }
+                    if (os != null) {
+                        os.flush();
+                        os.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
         if (file.exists()) {
             if (!folder.exists()) {
@@ -197,7 +228,23 @@ public class FileUtil {
     }
 
     public static boolean mkdir(Context context, File dir) {
-        return dir.mkdirs() || (SettingsProvider.getBoolean(context,
+        if (dir.exists()) {
+            return false;
+        }
+        if (dir.mkdirs()) {
+            return true;
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                DocumentFile document = DocumentFile.fromFile(dir.getParentFile());
+                if (document.exists()) {
+                    if (document.createDirectory(dir.getAbsolutePath()).exists()) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return (SettingsProvider.getBoolean(context,
                 SettingsProvider.KEY_ENABLE_ROOT, false) && RootUtils.isRootAvailable()
                 && RootUtils.createFolder(dir));
     }
@@ -223,13 +270,23 @@ public class FileUtil {
     }
 
     public static void renameFile(Context context, File oldFile, File newFile) {
-        try {
-            FileUtils.moveFile(oldFile, newFile);
-        } catch (IOException e) {
-            if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)) {
-                RootUtils.renameFile(oldFile, newFile);
+        if (oldFile.renameTo(newFile)) {
+            return;
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                DocumentFile document = DocumentFile.fromFile(oldFile);
+                if (document.renameTo(newFile.getAbsolutePath())) {
+                    return;
+                }
             }
         }
+        if (SettingsProvider.getBoolean(context, SettingsProvider.KEY_ENABLE_ROOT, false)) {
+            RootUtils.renameFile(oldFile, newFile);
+        }
+    }
+
+    public static long getFileSize(File file) {
+        return file.length();
     }
 
     public static void writeUri(Context context,

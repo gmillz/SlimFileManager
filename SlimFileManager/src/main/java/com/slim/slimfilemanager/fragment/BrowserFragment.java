@@ -225,7 +225,9 @@ public class BrowserFragment extends BaseBrowserFragment {
                 e.printStackTrace();
             }
         }
-        if (!success) {
+        if (success) {
+            filesChanged(mCurrentPath);
+        } else {
             toast(isFolder ? R.string.unable_to_create_folder : R.string.unable_to_create_file);
         }
     }
