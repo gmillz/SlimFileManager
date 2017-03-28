@@ -13,6 +13,7 @@ import com.gmillz.settingscards.SettingsTheme;
 import com.gmillz.settingscards.SwitchSetting;
 import com.slim.slimfilemanager.R;
 import com.slim.slimfilemanager.ThemeActivity;
+import com.slim.slimfilemanager.utils.RootUtils;
 import com.slim.util.Constant;
 
 public class SettingsActivity extends ThemeActivity implements
@@ -40,8 +41,10 @@ public class SettingsActivity extends ThemeActivity implements
 
     public void populateSettings() {
         SettingsCategory category = new SettingsCategory(R.string.file_manager);
-        mSettings.addSetting(category,
-                new SwitchSetting(R.string.enable_root_title, 0, SettingsProvider.KEY_ENABLE_ROOT));
+        if (RootUtils.isRootAvailable()) {
+            mSettings.addSetting(category,
+                    new SwitchSetting(R.string.enable_root_title, 0, SettingsProvider.KEY_ENABLE_ROOT));
+        }
         mSettings.addSetting(category,
                 new SwitchSetting(R.string.use_small_page_indicator,
                         R.string.small_page_indicator_summary, SettingsProvider.SMALL_INDICATOR));
@@ -112,7 +115,7 @@ public class SettingsActivity extends ThemeActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    public static class MySettingsTheme extends SettingsTheme {
+    private static class MySettingsTheme extends SettingsTheme {
         MySettingsTheme(Context context) {
             super(context);
             colorAccent = ThemeActivity.getAccentColor(context);

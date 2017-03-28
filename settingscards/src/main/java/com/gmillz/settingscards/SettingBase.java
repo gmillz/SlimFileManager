@@ -13,12 +13,12 @@ import android.widget.TextView;
 public class SettingBase {
 
     @StringRes
-    public int mTitleId;
+    private int mTitleId;
 
     @StringRes
-    public int mSummaryId;
+    private int mSummaryId;
 
-    public String mKey;
+    protected String mKey;
 
     private CharSequence mSummaryText;
 

@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v13.app.FragmentStatePagerAdapter;
@@ -63,22 +64,30 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     private static final int ROOT_ID = 0x005;
     private static final int SDCARD_ID = 0x006;
     @Bind(R.id.base)
+    @Nullable
     View mView;
     @Bind(R.id.toolbar)
     Toolbar mToolbar;
     @Bind(R.id.pager)
+    @Nullable
     ViewPager mViewPager;
     @Bind(R.id.indicator)
+    @Nullable
     PageIndicator mPageIndicator;
     @Bind(R.id.tab_indicator)
+    @Nullable
     TabPageIndicator mTabs;
     @Bind(R.id.drawer_layout)
+    @Nullable
     DrawerLayout mDrawerLayout;
     @Bind(R.id.nav_view)
+    @Nullable
     NavigationView mNavView;
     @Bind(R.id.paste)
+    @Nullable
     FloatingActionButton mPasteButton;
     @Bind(R.id.float_button)
+    @Nullable
     FloatingActionsMenu mActionMenu;
     int mCurrentPosition;
     boolean mMove;
@@ -113,21 +122,21 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
         Intent intent = getIntent();
 
-        setContentView(R.layout.file_manager);
-        ButterKnife.bind(this);
-        setupToolbar();
-
         checkPermissions();
 
         if (intent.getAction().equals(Intent.ACTION_GET_CONTENT)) {
-            hideViews();
+            setContentView(R.layout.file_picker);
+            ButterKnife.bind(this);
             showFragment(intent.getType());
             mPicking = true;
         } else {
+            setContentView(R.layout.file_manager);
+            ButterKnife.bind(this);
             setupNavigationDrawer();
             setupTabs();
             setupActionButtons();
         }
+        setupToolbar();
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -199,6 +208,10 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
             if (denied) {
                 Snackbar.make(mView, "Unable to continue, Permissions Denied",
                         Snackbar.LENGTH_SHORT).show();
+            } else {
+                for (TabItem tab : mSectionsPagerAdapter.getItems()) {
+                    tab.fragment.filesChanged(tab.path);
+                }
             }
         }
     }
@@ -248,8 +261,10 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     private void showFragment(String type) {
+        Log.d("TEST", "showFragment");
         BaseBrowserFragment fragment = new BrowserFragment();
-        getFragmentManager().beginTransaction().add(android.R.id.content, fragment).commit();
+        findViewById(R.id.content).setVisibility(View.VISIBLE);
+        getFragmentManager().beginTransaction().add(R.id.content, fragment).commit();
         setCurrentlyDisplayedFragment(fragment);
         fragment.setPicking();
         fragment.setMimeType(type);
@@ -440,6 +455,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     public void setTabTitle(final BaseBrowserFragment fragment, final String path) {
+        if (mPicking) return;
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -704,7 +720,13 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         void addDefault() {
             mItems.add(new TabItem(Environment.getExternalStorageDirectory().getAbsolutePath(),
                     TabItem.TAB_BROWSER));
-            mItems.add(new TabItem("/", TabItem.TAB_BROWSER));
+            if (RootUtils.isRootAvailable() && SettingsProvider.getBoolean(FileManager.this,
+                    SettingsProvider.KEY_ENABLE_ROOT, false)) {
+                mItems.add(new TabItem("/", TabItem.TAB_BROWSER));
+            } else {
+                mItems.add(new TabItem(Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_DOWNLOADS).getPath(), TabItem.TAB_BROWSER));
+            }
         }
 
         @Override

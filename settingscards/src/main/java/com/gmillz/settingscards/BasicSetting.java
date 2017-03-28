@@ -6,6 +6,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class BasicSetting extends SettingBase {
 
     private View mExtraView;

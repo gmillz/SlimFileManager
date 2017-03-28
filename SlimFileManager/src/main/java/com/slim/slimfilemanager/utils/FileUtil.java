@@ -1,11 +1,8 @@
 package com.slim.slimfilemanager.utils;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Build;
-import android.os.ParcelFileDescriptor;
 import android.support.v4.provider.DocumentFile;
-import android.telephony.IccOpenLogicalChannelResponse;
 import android.text.TextUtils;
 
 import com.slim.slimfilemanager.settings.SettingsProvider;
@@ -17,13 +14,12 @@ import org.apache.commons.io.IOUtils;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 
 import trikita.log.Log;
 
+@SuppressWarnings("WeakerAccess")
 public class FileUtil {
 
     public static boolean copyFile(Context context, String f, String fol) {
@@ -287,16 +283,5 @@ public class FileUtil {
 
     public static long getFileSize(File file) {
         return file.length();
-    }
-
-    public static void writeUri(Context context,
-                                Uri uri, String newContent, String encoding) throws IOException {
-        ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "w");
-        if (pfd != null) {
-            FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
-            fileOutputStream.write(newContent.getBytes(Charset.forName(encoding)));
-            fileOutputStream.close();
-            pfd.close();
-        }
     }
 }
