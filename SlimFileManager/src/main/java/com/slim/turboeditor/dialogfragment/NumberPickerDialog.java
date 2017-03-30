@@ -26,11 +26,10 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.NumberPicker;
+import android.widget.SeekBar;
 
 import com.slim.slimfilemanager.R;
 import com.slim.turboeditor.views.DialogHelper;
-
-import butterknife.ButterKnife;
 
 public class NumberPickerDialog extends DialogFragment {
 
@@ -74,7 +73,7 @@ public class NumberPickerDialog extends DialogFragment {
                 .setView(R.layout.dialog_fragment_seekbar)
                 .createSkeletonView();
 
-        this.mSeekBar = ButterKnife.findById(view, android.R.id.input);
+        this.mSeekBar = (NumberPicker) view.findViewById(android.R.id.input);
         this.mSeekBar.setMaxValue(getArguments().getInt("max"));
         this.mSeekBar.setMinValue(getArguments().getInt("min"));
         this.mSeekBar.setValue(getArguments().getInt("current"));

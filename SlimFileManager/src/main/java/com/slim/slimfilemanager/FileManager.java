@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v13.app.FragmentStatePagerAdapter;
@@ -23,6 +22,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -52,42 +52,22 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import trikita.log.Log;
-
 public class FileManager extends ThemeActivity implements View.OnClickListener,
         NavigationView.OnNavigationItemSelectedListener {
 
     private static final int EXTERNALSD_ID = 0x003;
+    @SuppressWarnings("unused")
     private static final int USB_OTG_ID = 0x004;
     private static final int ROOT_ID = 0x005;
     private static final int SDCARD_ID = 0x006;
-    @Bind(R.id.base)
-    @Nullable
     View mView;
-    @Bind(R.id.toolbar)
     Toolbar mToolbar;
-    @Bind(R.id.pager)
-    @Nullable
     ViewPager mViewPager;
-    @Bind(R.id.indicator)
-    @Nullable
     PageIndicator mPageIndicator;
-    @Bind(R.id.tab_indicator)
-    @Nullable
     TabPageIndicator mTabs;
-    @Bind(R.id.drawer_layout)
-    @Nullable
     DrawerLayout mDrawerLayout;
-    @Bind(R.id.nav_view)
-    @Nullable
     NavigationView mNavView;
-    @Bind(R.id.paste)
-    @Nullable
     FloatingActionButton mPasteButton;
-    @Bind(R.id.float_button)
-    @Nullable
     FloatingActionsMenu mActionMenu;
     int mCurrentPosition;
     boolean mMove;
@@ -126,12 +106,12 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
 
         if (intent.getAction().equals(Intent.ACTION_GET_CONTENT)) {
             setContentView(R.layout.file_picker);
-            ButterKnife.bind(this);
+            mView = findViewById(R.id.base);
             showFragment(intent.getType());
             mPicking = true;
         } else {
             setContentView(R.layout.file_manager);
-            ButterKnife.bind(this);
+            mView = findViewById(R.id.base);
             setupNavigationDrawer();
             setupTabs();
             setupActionButtons();
@@ -152,6 +132,7 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         }
     }
 
+    @SuppressWarnings("unused")
     public void addActivityCallback(ActivityCallback callback) {
         mCallbacks.add(callback);
     }
@@ -169,10 +150,6 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         for (ActivityCallback callback : mCallbacks) {
             callback.onActivityResult(requestCode, resultCode, data);
         }
-    }
-
-    public Toolbar getToolbar() {
-        return mToolbar;
     }
 
     public void checkPermissions() {
@@ -261,7 +238,6 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     private void showFragment(String type) {
-        Log.d("TEST", "showFragment");
         BaseBrowserFragment fragment = new BrowserFragment();
         findViewById(R.id.content).setVisibility(View.VISIBLE);
         getFragmentManager().beginTransaction().add(R.id.content, fragment).commit();
@@ -270,22 +246,16 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         fragment.setMimeType(type);
     }
 
-    private void hideViews() {
-        mNavView.setVisibility(View.GONE);
-        mDrawerLayout.setVisibility(View.GONE);
-        mViewPager.setVisibility(View.GONE);
-        mPageIndicator.setVisibility(View.GONE);
-        mTabs.setVisibility(View.GONE);
-        mActionMenu.setVisibility(View.GONE);
-        mPasteButton.setVisibility(View.GONE);
-    }
-
     private void setupToolbar() {
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         mToolbar.setTitle(R.string.file_manager);
     }
 
     private void setupNavigationDrawer() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mNavView = (NavigationView) findViewById(R.id.nav_view);
+
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close);
 
@@ -397,6 +367,10 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     private void setupTabs() {
+        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mPageIndicator = (PageIndicator) findViewById(R.id.indicator);
+        mTabs = (TabPageIndicator) findViewById(R.id.tab_indicator);
+
         mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
@@ -437,6 +411,9 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     private void setupPageIndicators() {
+        mPageIndicator = (PageIndicator) findViewById(R.id.indicator);
+        mTabs = (TabPageIndicator) findViewById(R.id.tab_indicator);
+
         mPageIndicator.setViewPager(mViewPager);
         mTabs.setViewPager(mViewPager);
 
@@ -473,6 +450,9 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     }
 
     private void setupActionButtons() {
+        mActionMenu = (FloatingActionsMenu) findViewById(R.id.float_button);
+        mPasteButton = (FloatingActionButton) findViewById(R.id.paste);
+
         buildActionButtons();
 
         mActionMenu.setColorNormal(getAccentColor(this));
@@ -550,7 +530,6 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
     public void getExternalSDCard() {
         SDCardUtils.initialize(this);
         String extSD = SDCardUtils.instance().getDirectory();
-        Log.d(extSD);
         if (!TextUtils.isEmpty(extSD)) {
             mNavView.getMenu().add(0, EXTERNALSD_ID, 0, "External SD");
         }
@@ -642,11 +621,12 @@ public class FileManager extends ThemeActivity implements View.OnClickListener,
         SettingsProvider.putInt(this, "current_tab", mViewPager.getCurrentItem());
     }
 
-    public interface ActivityCallback {
+    private interface ActivityCallback {
         void onActivityResult(int requestCode, int resultCode, Intent data);
     }
 
-    public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
+    @SuppressWarnings("unused")
+    private class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
         ArrayList<TabItem> mItems = new ArrayList<>();
 

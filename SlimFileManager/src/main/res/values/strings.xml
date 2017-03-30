@@ -102,7 +102,7 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="please_wait">Please wait…</string>
-    <string name="occurrences_found">%s occurrences was found</string>
+    <string name="occurrences_found">%i occurrences was found</string>
     <string name="match_case">Match case</string>
     <string name="split_text_if_too_long">Split the text if too long</string>
     <string name="encoding">Encoding</string>

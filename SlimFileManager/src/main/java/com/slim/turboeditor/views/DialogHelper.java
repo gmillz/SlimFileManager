@@ -34,8 +34,6 @@ import com.slim.slimfilemanager.R;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import static butterknife.ButterKnife.findById;
-
 /**
  * Helper class for showing fragment dialogs.
  */
@@ -155,8 +153,8 @@ public class DialogHelper {
 
             ViewGroup rootLayout = (ViewGroup) createSkeletonView();
             View bodyRootView = inflater.inflate(R.layout.dialog, rootLayout, false);
-            ViewGroup bodyLayout = findById(bodyRootView, R.id.content);
-            TextView messageView = findById(bodyLayout, R.id.message);
+            ViewGroup bodyLayout = (ViewGroup) bodyRootView.findViewById(R.id.content);
+            TextView messageView = (TextView) bodyLayout.findViewById(R.id.message);
 
             rootLayout.addView(bodyRootView);
 
@@ -182,7 +180,7 @@ public class DialogHelper {
 
             ViewGroup rootLayout =
                     (ViewGroup) View.inflate(mContext, R.layout.dialog_skeleton, null);
-            TextView titleView = findById(rootLayout, R.id.title);
+            TextView titleView = (TextView) rootLayout.findViewById(R.id.title);
 
             // Setup title
             if (mTitleText != null) {

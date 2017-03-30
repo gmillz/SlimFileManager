@@ -1,6 +1,7 @@
 package com.slim.slimfilemanager.utils;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.apache.commons.io.IOUtils;
 
@@ -10,8 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-import trikita.log.Log;
-
+@SuppressWarnings("WeakerAccess")
 public class RootUtils {
 
     protected final static Pattern sEscape = Pattern.compile("([\"\'`\\\\])");

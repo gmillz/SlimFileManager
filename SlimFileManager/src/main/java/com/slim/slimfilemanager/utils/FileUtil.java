@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Build;
 import android.support.v4.provider.DocumentFile;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.slim.slimfilemanager.settings.SettingsProvider;
 
@@ -16,8 +17,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import trikita.log.Log;
 
 @SuppressWarnings("WeakerAccess")
 public class FileUtil {
@@ -165,7 +164,7 @@ public class FileUtil {
             output.error = IOUtils.toString(process.getErrorStream());
 
             if (output.exitCode != 0 || (!TextUtils.isEmpty(output.error))) {
-                Log.e("Root Error, cmd: " + cmd, "error: " + output.error);
+                Log.e("Shell Error, cmd: " + cmd, "error: " + output.error);
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

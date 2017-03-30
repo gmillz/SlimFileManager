@@ -59,13 +59,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import butterknife.Bind;
-import butterknife.ButterKnife;
-
-import static butterknife.ButterKnife.findById;
 
 public abstract class BaseBrowserFragment extends Fragment implements View.OnClickListener,
         FragmentLifecycle, SearchView.OnQueryTextListener {
@@ -80,7 +73,6 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
     protected static final int MENU_SHARE = 1006;
     protected static final int MENU_ARCHIVE = 1007;
     protected static final String ARG_PATH = "path";
-    protected final Executor mExecutor = Executors.newFixedThreadPool(2);
     protected List<Integer> ACTIONS = new ArrayList<>();
     protected String mCurrentPath;
     protected String mMimeType;
@@ -96,13 +88,9 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
     protected boolean mExitOnBack = false;
     protected boolean mSearching = false;
     protected boolean mPicking = false;
-    @Bind(R.id.path)
     TextView mPath;
-    @Bind(R.id.swipe_refresh)
     SwipeRefreshLayout mRefreshLayout;
-    @Bind(R.id.progress)
     ProgressBar mProgress;
-    @Bind(R.id.list)
     RecyclerView mRecyclerView;
     private MultiSelector mMultiSelector = new MultiSelector();
     ActionMode.Callback mMultiSelect = new ActionMode.Callback() {
@@ -276,7 +264,10 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_browser, container, false);
 
-        ButterKnife.bind(this, rootView);
+        mPath = (TextView) rootView.findViewById(R.id.path);
+        mRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipe_refresh);
+        mProgress = (ProgressBar) rootView.findViewById(R.id.progress);
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.list);
 
         String defaultDir = null;
         Bundle extras = getArguments();
@@ -346,6 +337,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         });
     }
 
+    @SuppressWarnings("unused")
     protected void showProgress() {
         mActivity.runOnUiThread(new Runnable() {
             @Override
@@ -370,6 +362,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         });
     }
 
+    @SuppressWarnings("unused")
     public void updateProgress(final int val) {
         mActivity.runOnUiThread(new Runnable() {
             @Override
@@ -718,7 +711,7 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                 case ACTION_ADD_FOLDER:
                 case MENU_RENAME:
                     View view = View.inflate(getOwner().mContext, R.layout.add_folder, null);
-                    final EditText folderName = findById(view, R.id.folder_name);
+                    final EditText folderName = (EditText) view.findViewById(R.id.folder_name);
                     final BaseFile baseFile;
                     if (SelectedFiles.getFiles().size() > 0) {
                         baseFile = SelectedFiles.getFiles().get(0);
@@ -754,15 +747,15 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
                         }
                     };
                     if (id == MENU_RENAME) {
-                        ((Button) findById(view, R.id.create)).setText(R.string.rename);
+                        ((Button) view.findViewById(R.id.create)).setText(R.string.rename);
                     }
-                    findById(view, R.id.cancel).setOnClickListener(listener);
-                    findById(view, R.id.create).setOnClickListener(listener);
+                    view.findViewById(R.id.cancel).setOnClickListener(listener);
+                    view.findViewById(R.id.create).setOnClickListener(listener);
                     return builder.create();
                 case MENU_ARCHIVE:
                     View v = View.inflate(getOwner().mContext, R.layout.archive, null);
-                    final Spinner archiveType = findById(v, R.id.archive_type);
-                    final EditText archiveName = findById(v, R.id.archive_name);
+                    final Spinner archiveType = (Spinner) v.findViewById(R.id.archive_type);
+                    final EditText archiveName = (EditText) v.findViewById(R.id.archive_name);
                     if (SelectedFiles.getFiles().size() == 1) {
                         builder.setTitle(SelectedFiles.getFiles().get(0).getName());
                     } else {
@@ -806,7 +799,8 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         }
     }
 
-    public class ViewAdapter extends RecyclerView.Adapter<BrowserViewHolder> {
+    @SuppressWarnings("WeakerAccess")
+    protected class ViewAdapter extends RecyclerView.Adapter<BrowserViewHolder> {
 
         @Override
         public BrowserViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -847,23 +841,24 @@ public abstract class BaseBrowserFragment extends Fragment implements View.OnCli
         }
     }
 
-    public class BrowserViewHolder extends MultiChoiceViewHolder
+    private class BrowserViewHolder extends MultiChoiceViewHolder
             implements View.OnClickListener, View.OnLongClickListener {
 
-        @Bind(R.id.title)
         public TextView title;
-        @Bind(R.id.date)
-        public TextView date;
-        @Bind(R.id.info)
-        public TextView info;
-        @Bind(R.id.image)
+        private TextView date;
+        private TextView info;
         public ImageView icon;
-        @Bind(R.id.ripple_layout)
         MaterialRippleLayout rippleLayout;
 
         BrowserViewHolder(View v) {
             super(v, mMultiSelector);
-            ButterKnife.bind(this, v);
+
+            title = (TextView) v.findViewById(R.id.title);
+            date = (TextView) v.findViewById(R.id.date);
+            info = (TextView) v.findViewById(R.id.info);
+            icon = (ImageView) v.findViewById(R.id.image);
+            rippleLayout = (MaterialRippleLayout) v.findViewById(R.id.ripple_layout);
+
             v.setOnClickListener(this);
             v.setOnLongClickListener(this);
             v.setLongClickable(true);

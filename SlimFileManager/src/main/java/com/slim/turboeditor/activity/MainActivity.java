@@ -75,11 +75,6 @@ import java.lang.ref.WeakReference;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import butterknife.Bind;
-import butterknife.ButterKnife;
-
-import static butterknife.ButterKnife.findById;
-
 public class MainActivity extends ThemeActivity implements FindTextDialog
         .SearchDialogInterface, GoodScrollView.ScrollInterface, PageSystem.PageSystemInterface,
         PageSystemButtons.PageButtonsInterface, NumberPickerDialog.INumberPickerDialog,
@@ -96,11 +91,8 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
             ID_REDO = R.id.im_redo;
     private static String currentEncoding = "UTF-16";
     private final Handler updateHandler = new Handler();
-    @Bind(R.id.horizontal_scroll)
     HorizontalScrollView mHorizontalScroll;
-    @Bind(R.id.vertical_scroll)
     GoodScrollView verticalScroll;
-    @Bind(R.id.editor)
     Editor mEditor;
     private final Runnable colorRunnable_duringEditing =
             new Runnable() {
@@ -144,7 +136,10 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         setSupportActionBar(toolbar);
         toolbar.setTitle(R.string.text_editor);
 
-        ButterKnife.bind(this);
+        mEditor = (Editor) findViewById(R.id.editor);
+        verticalScroll = (GoodScrollView) findViewById(R.id.vertical_scroll);
+        mHorizontalScroll = (HorizontalScrollView) findViewById(R.id.horizontal_scroll);
+
 
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage(getString(R.string.please_wait));
@@ -217,7 +212,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
             return false;
         } else {
             if (mEditor == null)
-                mEditor = findById(this, R.id.editor);
+                mEditor = (Editor) findViewById(R.id.editor);
 
             // this will happen on first key pressed on hard-keyboard only. Once myInputField
             // gets the focus again, it will automatically receive further key presses.
@@ -502,8 +497,8 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         pageSystem = new PageSystem(this);
 
         pageSystemButtons = new PageSystemButtons(this, this,
-                (FloatingActionButton) findById(this, R.id.fabPrev),
-                (FloatingActionButton) findById(this, R.id.fabNext));
+                (FloatingActionButton) findViewById(R.id.fabPrev),
+                (FloatingActionButton) findViewById(R.id.fabNext));
 
         mEditor.setupEditor(this, verticalScroll);
     }
@@ -512,7 +507,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
 
         fileOpened = true;
 
-        findById(this, R.id.text_editor).setVisibility(View.VISIBLE);
+        findViewById(R.id.text_editor).setVisibility(View.VISIBLE);
 
         mEditor.resetVariables();
         searchResult = null;
@@ -529,7 +524,7 @@ public class MainActivity extends ThemeActivity implements FindTextDialog
         fileOpened = false;
 
         try {
-            findById(this, R.id.text_editor).setVisibility(View.GONE);
+            findViewById(R.id.text_editor).setVisibility(View.GONE);
 
             mEditor.disableTextChangedListener();
             mEditor.replaceTextKeepCursor("");

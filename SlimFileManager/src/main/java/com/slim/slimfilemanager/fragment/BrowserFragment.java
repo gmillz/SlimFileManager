@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import trikita.log.Log;
-
 public class BrowserFragment extends BaseBrowserFragment {
 
     public static BaseBrowserFragment newInstance(String path) {
@@ -146,7 +144,6 @@ public class BrowserFragment extends BaseBrowserFragment {
                         @Override
                         public void onGetFile(File file) {
                             boolean passed;
-                            Log.d("TEST", "file=" + file.getAbsolutePath() + " : current=" + mCurrentPath);
                             if (move) {
                                 passed = FileUtil.moveFile(
                                         mContext, file.getAbsolutePath(), mCurrentPath);
@@ -167,9 +164,6 @@ public class BrowserFragment extends BaseBrowserFragment {
 
     @Override
     public String getRootFolder() {
-        Log.d("ROOT=" + Environment.getRootDirectory().getAbsolutePath());
-        Log.d("DOWNLOAD-CACHE=" + Environment.getDownloadCacheDirectory().getAbsolutePath());
-        Log.d("DATA=" + Environment.getDataDirectory());
         if (SettingsProvider.getBoolean(mContext, SettingsProvider.KEY_ENABLE_ROOT, false)
                 && RootUtils.isRootAvailable()) {
             return File.separator;

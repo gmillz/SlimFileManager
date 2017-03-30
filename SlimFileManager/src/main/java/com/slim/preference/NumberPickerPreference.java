@@ -9,7 +9,6 @@ import android.widget.NumberPicker;
 
 import com.slim.slimfilemanager.R;
 
-import static butterknife.ButterKnife.findById;
 
 public class NumberPickerPreference extends DialogPreference {
     private int mMin, mMax, mDefault;
@@ -80,7 +79,7 @@ public class NumberPickerPreference extends DialogPreference {
 
         View view = View.inflate(getContext(), R.layout.number_picker_dialog, null);
 
-        mNumberPicker = findById(view, R.id.number_picker);
+        mNumberPicker = (NumberPicker) view.findViewById(R.id.number_picker);
 
         // Initialize state
         mNumberPicker.setMaxValue(max);

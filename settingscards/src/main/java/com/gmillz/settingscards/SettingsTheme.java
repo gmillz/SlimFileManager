@@ -17,11 +17,7 @@ public class SettingsTheme {
     public int secondaryTextColor;
 
     public SettingsTheme(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            colorAccent = getAttrColor(context, android.R.attr.colorAccent);
-        } else {
-            colorAccent = getAttrColor(context, R.attr.colorAccent);
-        }
+        colorAccent = getAttrColor(context, android.R.attr.colorAccent);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             cardBackground = getAttrColor(context, android.R.attr.colorBackgroundFloating);
         } else {

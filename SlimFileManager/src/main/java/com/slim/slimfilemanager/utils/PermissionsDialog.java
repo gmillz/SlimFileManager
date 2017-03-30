@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.support.annotation.IdRes;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -13,38 +14,23 @@ import com.slim.slimfilemanager.R;
 
 import java.io.File;
 
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import butterknife.OnCheckedChanged;
+public class PermissionsDialog implements CheckBox.OnCheckedChangeListener {
 
-public class PermissionsDialog {
+    private AlertDialog.Builder mBuilder;
 
-    AlertDialog.Builder mBuilder;
-
-    Permissions mOriginalPermissions;
-    Permissions mPermissions;
-    @Bind(R.id.owner)
-    EditText mOwner;
-    @Bind(R.id.group)
-    EditText mGroup;
-    @Bind(R.id.uread)
-    CheckBox uRead;
-    @Bind(R.id.uwrite)
-    CheckBox uWrite;
-    @Bind(R.id.uexecute)
-    CheckBox uExecute;
-    @Bind(R.id.gread)
-    CheckBox gRead;
-    @Bind(R.id.gwrite)
-    CheckBox gWrite;
-    @Bind(R.id.gexecute)
-    CheckBox gExecute;
-    @Bind(R.id.oread)
-    CheckBox oRead;
-    @Bind(R.id.owrite)
-    CheckBox oWrite;
-    @Bind(R.id.oexecute)
-    CheckBox oExecute;
+    private Permissions mOriginalPermissions;
+    private Permissions mPermissions;
+    private EditText mOwner;
+    private EditText mGroup;
+    private CheckBox uRead;
+    private CheckBox uWrite;
+    private CheckBox uExecute;
+    private CheckBox gRead;
+    private CheckBox gWrite;
+    private CheckBox gExecute;
+    private CheckBox oRead;
+    private CheckBox oWrite;
+    private CheckBox oExecute;
     private View mView;
     private File mFile;
     private Context mContext;
@@ -61,10 +47,7 @@ public class PermissionsDialog {
         init();
     }
 
-    @OnCheckedChanged({R.id.uread, R.id.uwrite, R.id.uexecute,
-            R.id.gread, R.id.gwrite, R.id.gexecute,
-            R.id.oread, R.id.owrite, R.id.oexecute})
-    @SuppressWarnings("unused")
+    @Override
     public void onCheckedChanged(CompoundButton view, boolean isChecked) {
         if (view == uRead) {
             mPermissions.userRead = isChecked;
@@ -110,7 +93,25 @@ public class PermissionsDialog {
 
     private void initViews() {
         mView = View.inflate(mContext, R.layout.permissions, null);
-        ButterKnife.bind(this, mView);
+        mOwner = (EditText) mView.findViewById(R.id.owner);
+        mGroup = (EditText) mView.findViewById(R.id.group);
+
+        uRead = (CheckBox) mView.findViewById(R.id.uread);
+        uWrite = (CheckBox) mView.findViewById(R.id.uwrite);
+        uExecute = (CheckBox) mView.findViewById(R.id.uexecute);
+        gRead = (CheckBox) mView.findViewById(R.id.gread);
+        gWrite = (CheckBox) mView.findViewById(R.id.gwrite);
+        gExecute = (CheckBox) mView.findViewById(R.id.gexecute);
+        oRead = (CheckBox) mView.findViewById(R.id.oread);
+        oWrite = (CheckBox) mView.findViewById(R.id.owrite);
+        oExecute = (CheckBox) mView.findViewById(R.id.oexecute);
+
+        int[] ids = { R.id.uread, R.id.uwrite, R.id.uexecute,
+                R.id.gread, R.id.gwrite, R.id.gexecute,
+                R.id.oread, R.id.owrite, R.id.oexecute };
+        for (@IdRes int id : ids) {
+            ((CheckBox) mView.findViewById(id)).setOnCheckedChangeListener(this);
+        }
     }
 
     private void initBuilder() {
