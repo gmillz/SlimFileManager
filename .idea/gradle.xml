@@ -8,7 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/SlimFileManager" />
+            <option value="$PROJECT_DIR$/manager" />
             <option value="$PROJECT_DIR$/settingscards" />
           </set>
         </option>

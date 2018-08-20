@@ -1,0 +1,89 @@
+<resources>
+    <string name="app_name">SlimFileManager</string>
+
+    <string name="file_manager">FileManager</string>
+
+    <string name="blank" translatable="false">---</string>
+
+    <!-- Shortcuts -->
+    <string name="root_title">Root</string>
+    <string name="sdcard_title">SD Card</string>
+    <string name="downloads_title">Downloads</string>
+    <string name="dcim_title">DCIM</string>
+
+    <string name="cant_open_file">Unable to open file.</string>
+
+    <string name="use_small_page_indicator">Use small page indicator</string>
+    <string name="small_page_indicator_summary">Hide tabs and show small indicator.</string>
+
+    <!-- Actions -->
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="copy">Copy</string>
+    <string name="move">Move</string>
+    <string name="rename">Rename</string>
+    <string name="share">Share</string>
+    <string name="archive">Archive</string>
+    <string name="search">Search</string>
+    <string name="create">Create</string>
+
+    <string name="create_folder">Add Folder</string>
+    <string name="create_file">Add File</string>
+    <string name="folder_name_hint">Folder name</string>
+    <string name="file_name_hint">File name</string>
+    <string name="folder_exists">Folder exists</string>
+    <string name="file_exists">File exists</string>
+    <string name="unable_to_create_file">Cannot create file.</string>
+    <string name="unable_to_create_folder">Cannot create folder.</string>
+
+    <string name="destination_file_exists">Destination file exists</string>
+    <string name="source_title">"Source: "</string>
+    <string name="destination_title">"Destination: "</string>
+    <string name="replace">Replace</string>
+    <string name="replace_all">Replace All</string>
+    <string name="skip">Skip</string>
+    <string name="skip_all">Skip All</string>
+
+    <string name="delete_dialog_title">"Delete files ?"</string>
+
+    <string name="action_settings">Settings</string>
+
+    <string name="icon_description">Item icon</string>
+
+    <string name="enable_root_title">Enable root</string>
+
+    <string name="delete_dialog_message">"This cannot be undone!"</string>
+    <string name="back_confirm">Press back again to exit.</string>
+
+    <!-- app theme -->
+    <string name="theme_options">Theme options</string>
+    <string name="dark">Dark</string>
+    <string name="light">Light</string>
+
+    <!-- theme color settings -->
+
+    <!-- permissions-->
+    <string name="permissions">Permissions</string>
+    <string name="owner">Owner</string>
+    <string name="group">Group</string>
+    <string name="other">Other</string>
+    <string name="read">Read</string>
+    <string name="write">Write</string>
+    <string name="execute">Execute</string>
+
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+
+    <!-- Sort Mode -->
+    <string name="sort_mode_title">Sort Mode</string>
+    <string name="sort_mode_name">Name</string>
+    <string name="sort_mode_size">Size</string>
+    <string name="sort_mode_type">Type</string>
+
+    <!-- Text Editor -->
+    <string name="theme">Theme</string>
+
+    <!-- About -->
+
+</resources>
